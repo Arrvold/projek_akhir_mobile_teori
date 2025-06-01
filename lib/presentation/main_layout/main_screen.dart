@@ -1,0 +1,70 @@
+import 'package:flutter/material.dart';
+import '../home/screens/home_screen.dart'; // Import HomeScreen
+// Import placeholder untuk Profile dan Kesan Pesan
+import '../profile/screens/profile_screen.dart';
+import '../impressions/screens/impressions_screen.dart';
+import '../wishlist/screens/wishlist_screen.dart';
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 0;
+
+  // Daftar halaman untuk BottomNavigationBar
+  static const List<Widget> _widgetOptions = <Widget>[
+    HomeScreen(),
+    WishlistScreen(),
+    ProfileScreen(), // Nanti kita buat ProfileScreen sebenarnya
+    ImpressionsScreen(), // Nanti kita buat ImpressionsScreen sebenarnya
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Utama',
+          ),
+          BottomNavigationBarItem(
+            // <-- ITEM BARU UNTUK WISHLIST
+            icon: Icon(Icons.favorite_border_outlined),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Wishlist',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.rate_review_outlined),
+            activeIcon: Icon(Icons.rate_review),
+            label: 'Kesan Pesan',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor:
+            Theme.of(context).primaryColor, // Warna item terpilih
+        unselectedItemColor: Colors.grey[600], // Warna item tidak terpilih
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed, // Agar semua label terlihat
+        showUnselectedLabels: true,
+      ),
+    );
+  }
+}
