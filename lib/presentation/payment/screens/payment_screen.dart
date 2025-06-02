@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/config/constants.dart';
-import '../../../data/models/movie_detail_model.dart'; // Jika butuh info detail
-// import '../../../data/models/user_model.dart'; // Untuk ID user saat menyimpan rental
+import '../../../data/models/movie_detail_model.dart'; 
 import '../../../data/sources/local/database_helper.dart';
 import '../../../data/sources/local/preferences_helper.dart';
 import '../../../services/currency_service.dart';
 import '../../../services/location_service.dart';
-import '../../../services/notification_service.dart'; // Akan kita buat/gunakan nanti
+import '../../../services/notification_service.dart'; 
 import '../../../data/models/rental_model.dart';
 
 
@@ -22,15 +21,19 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final LocationService _locationService = LocationService();
   final CurrencyService _currencyService = CurrencyService();
-  final NotificationService _notificationService = NotificationService(); // Instance NotificationService
-  // final NotificationService _notificationService = NotificationService(); // Nanti
+  final NotificationService _notificationService = NotificationService(); 
+
 
   String? _selectedCurrencyCode;
   String _selectedCurrencySymbol = '';
   double? _displayedPrice;
   bool _isLoading = true;
   String? _error;
-  List<SupportedCountry> _availableCurrencies = SUPPORTED_COUNTRIES; // Daftar untuk dropdown
+  List<SupportedCountry> _availableCurrencies = SUPPORTED_COUNTRIES;
+  RentalDurationOption _selectedRentalDuration = SUPPORTED_RENTAL_DURATIONS.firstWhere(
+      (opt) => opt.duration.inHours == RENTAL_DURATION_HOURS, 
+      orElse: () => SUPPORTED_RENTAL_DURATIONS[1] 
+  ); 
 
   @override
   void initState() {
@@ -95,19 +98,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() { _isLoading = true; });
 
     try {
-      // 1. Dapatkan ID pengguna yang sedang login DARI PREFERENCES HELPER
+      //Dapatkan ID pengguna login
       int? loggedInUserId = await PreferencesHelper.getLoggedInUserId();
 
       if (loggedInUserId == null) {
-        // Ini seharusnya tidak terjadi jika alur aplikasi benar (pengguna harus login untuk ke payment)
         throw Exception("Sesi pengguna tidak ditemukan. Silakan login kembali.");
       }
 
       DateTime rentalStartUtc = DateTime.now().toUtc();
-      DateTime rentalEndUtc = rentalStartUtc.add(const Duration(hours: RENTAL_DURATION_HOURS));
+      Duration selectedDuration = _selectedRentalDuration.duration;
+      DateTime rentalEndUtc = rentalStartUtc.add(selectedDuration);
 
       RentalModel newRental = RentalModel(
-        userId: loggedInUserId, // <-- GUNAKAN loggedInUserId
+        userId: loggedInUserId, 
         movieId: widget.movie.id,
         movieTitle: widget.movie.title,
         moviePosterPath: widget.movie.posterPath ?? '',
@@ -119,13 +122,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
       await DatabaseHelper.instance.insertRental(newRental);
 
-      // --- PANGGIL FUNGSI NOTIFIKASI DI SINI ---
+      //NOTIFIKASI
       await _notificationService.showPaymentSuccessNotification(widget.movie.title);
       await _notificationService.scheduleWatchReminder(widget.movie.title, widget.movie.id, rentalStartUtc);
       await _notificationService.scheduleExpiryReminder(widget.movie.title, widget.movie.id, rentalEndUtc);
-      // -------------------------------------------
       
-      // ... (Logika Notifikasi placeholder)
       print("Notifikasi akan dijadwalkan (placeholder)");
 
       if (mounted) {
@@ -138,8 +139,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
           popCount++;
           return popCount == 3 || !Navigator.canPop(context); // Pop 2x atau sampai root
         });
-         // Atau jika ingin selalu ke main screen:
-        // Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
       }
 
     } catch (e) {
@@ -180,6 +179,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           child: Text('"${widget.movie.tagline!}"', style: theme.textTheme.titleMedium?.copyWith(fontStyle: FontStyle.italic)),
                         ),
                       const SizedBox(height: 20),
+                      Text('Pilih Durasi Sewa:', style: theme.textTheme.headlineSmall?.copyWith(fontSize: 18)),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<RentalDurationOption>(
+                        decoration: InputDecoration(
+                          labelText: 'Durasi Penyewaan',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          filled: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)
+                        ),
+                        value: _selectedRentalDuration,
+                        items: SUPPORTED_RENTAL_DURATIONS.map((RentalDurationOption option) {
+                          return DropdownMenuItem<RentalDurationOption>(
+                            value: option,
+                            child: Text(option.label),
+                          );
+                        }).toList(),
+                        onChanged: (RentalDurationOption? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedRentalDuration = newValue;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 24),
                       Text('Mata Uang & Harga:', style: theme.textTheme.headlineSmall),
                       const SizedBox(height: 10),
                       if (_availableCurrencies.isNotEmpty)

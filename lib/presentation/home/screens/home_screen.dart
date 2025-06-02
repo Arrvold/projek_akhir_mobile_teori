@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dart:async'; // Untuk StreamSubscription
-import 'dart:math'; // Untuk Random
-import 'package:sensors_plus/sensors_plus.dart'; // Import sensors_plus
+import 'dart:async'; 
+import 'dart:math'; 
+import 'package:sensors_plus/sensors_plus.dart'; 
 import 'package:carousel_slider/carousel_slider.dart';
-import '../../../core/widgets/movie_card.dart'; // Ganti ke MovieCard baru
+import '../../../core/widgets/movie_card.dart'; 
 import '../../movie_detail/screens/movie_detail_screen.dart';
-import '../../../data/models/movie_model.dart'; // Import MovieModel
-import '../../../data/models/genre_model.dart'; // Import GenreModel
-import '../../../data/sources/remote/tmdb_api_service.dart'; // Import service API
+import '../../../data/models/movie_model.dart'; 
+import '../../../data/models/genre_model.dart'; 
+import '../../../data/sources/remote/tmdb_api_service.dart'; 
+import '../../../data/sources/local/preferences_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,33 +33,50 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingGenres = true;
   bool _isSearching = false;
 
-  GenreModel? _selectedGenre; // Untuk menyimpan genre yang dipilih
+  GenreModel? _selectedGenre; 
   bool _isGenreFilterVisible = false;
+  String? _loggedInUsername;
 
   // Untuk Shake Detector
   StreamSubscription? _accelerometerSubscription;
-  static const double _shakeThreshold = 12.0; // Ambang batas kekuatan goyangan
-  static const int _shakeSlopTimeMS = 500; // Jeda waktu antar deteksi goyangan
+  static const double _shakeThreshold = 12.0; // kekuatan goyangan
+  static const int _shakeSlopTimeMS = 500; // Jeda waktu
   static const int _shakeCountResetTimeMS =
-      3000; // Waktu untuk mereset hitungan goyangan
+      3000;
 
   int _shakeTimestamp = DateTime.now().millisecondsSinceEpoch;
   int _shakeCount = 0;
   bool _isSuggestingMovie =
-      false; // Untuk mencegah multiple suggestion secara cepat
+      false; //mencegah banyak suggestion
 
   @override
   void initState() {
     super.initState();
     _fetchAllData();
-    _initShakeDetector(); // Inisialisasi detektor goyangan
+    _initShakeDetector();
+    _loadUserDataAndFetchMovies();
+  }
+
+  Future<void> _loadUserDataAndFetchMovies() async {
+    await _loadLoggedInUsername(); 
+    await _fetchAllData();       
+  }
+
+  // Fungsi untuk memuat nama pengguna dari SharedPreferences
+  Future<void> _loadLoggedInUsername() async {
+    String? username = await PreferencesHelper.getLoggedInUsername();
+    if (mounted) {
+      setState(() {
+        _loggedInUsername = username;
+      });
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _accelerometerSubscription
-        ?.cancel(); // Batalkan langganan sensor saat widget di-dispose
+        ?.cancel(); 
     super.dispose();
   }
 
@@ -76,8 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       double z = event.z;
 
       // Hitung kecepatan goyangan (g-force)
-      // Rumus: sqrt(x^2 + y^2 + z^2) / SensorManager.GRAVITY_EARTH (sekitar 9.8)
-      // Untuk UserAccelerometer, nilainya sudah tidak termasuk gravitasi, jadi bisa langsung
+      // Rumus: sqrt(x^2 + y^2 + z^2)
       double gForce = sqrt(x * x + y * y + z * z);
 
       if (gForce > _shakeThreshold) {
@@ -87,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
           return;
         }
 
-        // Reset hitungan jika jeda antar goyangan terlalu lama
         if (_shakeTimestamp + _shakeCountResetTimeMS < now) {
           _shakeCount = 0;
         }
@@ -97,8 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Jika terdeteksi goyangan beberapa kali (misalnya 2 kali)
         if (_shakeCount >= 2) {
-          // Deteksi setelah 2x goyangan cepat
-          _shakeCount = 0; // Reset hitungan
+          _shakeCount = 0;
           _suggestRandomMovie();
         }
       }
@@ -366,13 +381,20 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
       ),
       body: RefreshIndicator(
-        // Tambahkan RefreshIndicator
-        onRefresh: _fetchAllData,
+        onRefresh: _loadUserDataAndFetchMovies,
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_loggedInUsername != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  child: Text(
+                    'Selamat datang, $_loggedInUsername!',
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                ),
               // 1. Fitur Search
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -399,7 +421,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     fillColor: theme.inputDecorationTheme.fillColor,
                   ),
                   onChanged: (value) {
-                    // Search on type (debounce jika perlu)
                     if (value.length > 2 || value.isEmpty) {
                       _performSearch(value);
                     }
@@ -408,7 +429,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Tampilkan hasil pencarian jika ada, atau konten utama jika tidak
               _isSearching && _searchController.text.isNotEmpty
                   ? _buildSearchResults()
                   : _buildMainContent(theme),

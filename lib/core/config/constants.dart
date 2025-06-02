@@ -100,3 +100,19 @@ const List<SupportedCountry> SUPPORTED_COUNTRIES = [
 const String WIB = 'Asia/Jakarta';
 const String WITA = 'Asia/Makassar';
 const String WIT = 'Asia/Jayapura';
+
+class RentalDurationOption {
+  final String label; 
+  final Duration duration; 
+
+  const RentalDurationOption({required this.label, required this.duration});
+}
+
+const List<RentalDurationOption> SUPPORTED_RENTAL_DURATIONS = [
+  RentalDurationOption(label: '1 Hari (24 Jam)', duration: Duration(hours: 24)),
+  RentalDurationOption(label: '2 Hari (48 Jam)', duration: Duration(hours: 48)), 
+  RentalDurationOption(label: '3 Hari (72 Jam)', duration: Duration(hours: 72)),
+  RentalDurationOption(label: '1 Minggu (168 Jam)', duration: Duration(days: 7)),
+];
+
+const Duration DEFAULT_RENTAL_DURATION = Duration(hours: 48);
