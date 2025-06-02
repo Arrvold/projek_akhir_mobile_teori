@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Untuk NumberFormat
 import '../../../core/config/constants.dart';
-import '../../../data/models/movie_detail_model.dart'; 
+import '../../../data/models/movie_detail_model.dart';
+import '../../../data/models/rental_model.dart';
 import '../../../data/sources/local/database_helper.dart';
 import '../../../data/sources/local/preferences_helper.dart';
 import '../../../services/currency_service.dart';
 import '../../../services/location_service.dart';
-import '../../../services/notification_service.dart'; 
-import '../../../data/models/rental_model.dart';
-
+import '../../../services/notification_service.dart';
 
 class PaymentScreen extends StatefulWidget {
-  final MovieDetailModel movie; // Terima MovieDetailModel
-
+  final MovieDetailModel movie;
   const PaymentScreen({super.key, required this.movie});
 
   @override
@@ -21,60 +20,89 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final LocationService _locationService = LocationService();
   final CurrencyService _currencyService = CurrencyService();
-  final NotificationService _notificationService = NotificationService(); 
-
+  final NotificationService _notificationService = NotificationService();
 
   String? _selectedCurrencyCode;
   String _selectedCurrencySymbol = '';
-  double? _displayedPrice;
-  bool _isLoading = true;
+  double? _displayedPrice; // Harga yang sudah dikonversi ke _selectedCurrencyCode
+  double _currentBasePriceIdr = 0.0; // Harga dasar dalam IDR untuk durasi terpilih
+
+  bool _isLoadingDetails = true; // Untuk loading awal (lokasi, mata uang awal)
+  bool _isCalculatingPrice = false; // Untuk loading saat ganti durasi/mata uang
+
   String? _error;
-  List<SupportedCountry> _availableCurrencies = SUPPORTED_COUNTRIES;
-  RentalDurationOption _selectedRentalDuration = SUPPORTED_RENTAL_DURATIONS.firstWhere(
-      (opt) => opt.duration.inHours == RENTAL_DURATION_HOURS, 
-      orElse: () => SUPPORTED_RENTAL_DURATIONS[1] 
-  ); 
+  final List<SupportedCountry> _availableCurrencies = SUPPORTED_COUNTRIES;
+
+  // Inisialisasi _selectedRentalDuration dengan benar
+  late RentalDurationOption _selectedRentalDuration;
 
   @override
   void initState() {
     super.initState();
-    _initializePaymentDetails();
+    // Cari durasi default dari konstanta
+    _selectedRentalDuration = SUPPORTED_RENTAL_DURATIONS.firstWhere(
+      (opt) => opt.duration == DEFAULT_RENTAL_DURATION,
+      orElse: () => SUPPORTED_RENTAL_DURATIONS.length > 1 ? SUPPORTED_RENTAL_DURATIONS[1] : SUPPORTED_RENTAL_DURATIONS[0] // Fallback aman
+    );
+    // Set harga dasar awal berdasarkan durasi default, lalu inisialisasi detail pembayaran
+    _calculateBasePriceIdrAndUpdateDisplay(_selectedRentalDuration); // Hitung harga dasar IDR awal
+    _initializePaymentLocationAndCurrency(); // Kemudian tentukan mata uang & konversi
   }
 
-  Future<void> _initializePaymentDetails() async {
+  /// Menghitung harga dasar dalam IDR berdasarkan durasi terpilih
+  void _calculateBasePriceIdrAndUpdateDisplay(RentalDurationOption selectedDurationOption) {
     if (!mounted) return;
-    setState(() { _isLoading = true; _error = null; });
+    // Hitung jumlah hari, bulatkan ke atas jika ada sisa jam
+    int totalHours = selectedDurationOption.duration.inHours;
+    int totalDays = (totalHours / 24).ceil();
+    if (totalDays == 0 && totalHours > 0) totalDays = 1; // Minimal 1 hari jika ada jam
+
+    setState(() {
+      _currentBasePriceIdr = totalDays * BASE_RENTAL_PRICE_PER_DAY_IDR;
+    });
+    
+    print("Durasi: ${selectedDurationOption.label}, Total Hari Dihitung: $totalDays, Harga Dasar IDR: $_currentBasePriceIdr");
+
+    // Setelah base price IDR dihitung ulang, update harga yang ditampilkan dalam mata uang terpilih
+    if (_selectedCurrencyCode != null && _selectedCurrencySymbol.isNotEmpty) {
+      _updateDisplayedPriceForCurrency(_selectedCurrencyCode!, _selectedCurrencySymbol);
+    }
+  }
+
+  Future<void> _initializePaymentLocationAndCurrency() async {
+    if (!mounted) return;
+    setState(() { _isLoadingDetails = true; _error = null; });
     try {
       String? deviceCountryCode = await _locationService.getCurrentCountryCode();
-      String targetCurrency = FALLBACK_CURRENCY_CODE; // Default ke USD
+      String targetCurrencyCode = FALLBACK_CURRENCY_CODE;
       String targetSymbol = SUPPORTED_COUNTRIES.firstWhere((c) => c.currencyCode == FALLBACK_CURRENCY_CODE).currencySymbol;
-
 
       if (deviceCountryCode != null) {
         final supportedCountry = _currencyService.getSupportedCountryByCode(deviceCountryCode);
         if (supportedCountry != null) {
-          targetCurrency = supportedCountry.currencyCode;
+          targetCurrencyCode = supportedCountry.currencyCode;
           targetSymbol = supportedCountry.currencySymbol;
         }
       }
-      
-      await _updatePriceForCurrency(targetCurrency, targetSymbol);
+      // Harga awal akan dihitung berdasarkan _currentBasePriceIdr yang sudah diset dari durasi default
+      await _updateDisplayedPriceForCurrency(targetCurrencyCode, targetSymbol);
 
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); });
-      // Jika error, coba tampilkan harga default dalam IDR atau USD
-      await _updatePriceForCurrency(BASE_CURRENCY_CODE, SUPPORTED_COUNTRIES.firstWhere((c) => c.currencyCode == BASE_CURRENCY_CODE).currencySymbol);
-
+      if (mounted) setState(() { _error = "Gagal memuat info pembayaran awal: ${e.toString()}"; });
+      print("PaymentScreen Init Error: $e");
+      final idrData = SUPPORTED_COUNTRIES.firstWhere((c) => c.currencyCode == BASE_CURRENCY_CODE);
+      await _updateDisplayedPriceForCurrency(BASE_CURRENCY_CODE, idrData.currencySymbol); // Fallback ke IDR
     } finally {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted) setState(() { _isLoadingDetails = false; });
     }
   }
 
-  Future<void> _updatePriceForCurrency(String currencyCode, String currencySymbol) async {
-     if (!mounted) return;
-     setState(() { _isLoading = true; }); // Tampilkan loading saat ganti mata uang
+  Future<void> _updateDisplayedPriceForCurrency(String currencyCode, String currencySymbol) async {
+    if (!mounted) return;
+    setState(() { _isCalculatingPrice = true; _error = null; });
     try {
-      double? price = await _currencyService.getPriceInCurrency(currencyCode);
+      // Kirim _currentBasePriceIdr (harga dasar IDR yang sudah dihitung berdasarkan durasi)
+      double? price = await _currencyService.getPriceInCurrency(_currentBasePriceIdr, currencyCode);
       if (mounted) {
         setState(() {
           _selectedCurrencyCode = currencyCode;
@@ -83,34 +111,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
         });
       }
     } catch (e) {
-       if (mounted) setState(() { _error = "Gagal mengkonversi mata uang."; });
+      if (mounted) setState(() { _error = "Gagal mengkonversi mata uang ke $currencyCode."; });
+      print("Update Price Error: $e");
     } finally {
-       if (mounted) setState(() { _isLoading = false; });
+      if (mounted) setState(() { _isCalculatingPrice = false; });
     }
   }
 
   Future<void> _processPayment() async {
     if (_displayedPrice == null || _selectedCurrencyCode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Informasi harga tidak tersedia.")));
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Informasi harga tidak tersedia.")));
       return;
     }
-
-    setState(() { _isLoading = true; });
+    if (!mounted) return;
+    setState(() { _isLoadingDetails = true; }); // Gunakan _isLoadingDetails untuk proses bayar
 
     try {
-      //Dapatkan ID pengguna login
       int? loggedInUserId = await PreferencesHelper.getLoggedInUserId();
-
-      if (loggedInUserId == null) {
-        throw Exception("Sesi pengguna tidak ditemukan. Silakan login kembali.");
-      }
+      if (loggedInUserId == null) { throw Exception("Sesi pengguna tidak ditemukan. Silakan login kembali."); }
 
       DateTime rentalStartUtc = DateTime.now().toUtc();
-      Duration selectedDuration = _selectedRentalDuration.duration;
-      DateTime rentalEndUtc = rentalStartUtc.add(selectedDuration);
+      Duration finalRentalDuration = _selectedRentalDuration.duration;
+      DateTime rentalEndUtc = rentalStartUtc.add(finalRentalDuration);
 
       RentalModel newRental = RentalModel(
-        userId: loggedInUserId, 
+        userId: loggedInUserId,
         movieId: widget.movie.id,
         movieTitle: widget.movie.title,
         moviePosterPath: widget.movie.posterPath ?? '',
@@ -121,23 +146,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
       );
 
       await DatabaseHelper.instance.insertRental(newRental);
-
-      //NOTIFIKASI
+      
       await _notificationService.showPaymentSuccessNotification(widget.movie.title);
       await _notificationService.scheduleWatchReminder(widget.movie.title, widget.movie.id, rentalStartUtc);
-      await _notificationService.scheduleExpiryReminder(widget.movie.title, widget.movie.id, rentalEndUtc);
+      // Gunakan rentalEndUtc yang dinamis untuk notifikasi habis sewa (jika tidak dalam mode tes)
+      await _notificationService.scheduleExpiryReminder(widget.movie.title, widget.movie.id, rentalEndUtc); 
+      // await _notificationService.scheduleExpiryReminder(widget.movie.title, widget.movie.id, rentalStartUtc); // Untuk tes 3 menit
       
-      print("Notifikasi akan dijadwalkan (placeholder)");
+      print("PaymentScreen: Semua notifikasi telah diproses/dijadwalkan.");
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Film "${widget.movie.title}" berhasil disewa!'), backgroundColor: Colors.green),
         );
-        // Kembali 2 kali: dari payment screen, lalu dari detail screen
+        
         int popCount = 0;
         Navigator.popUntil(context, (route) {
           popCount++;
-          return popCount == 3 || !Navigator.canPop(context); // Pop 2x atau sampai root
+          return popCount >= 2 || !Navigator.canPop(context); 
         });
       }
 
@@ -145,14 +171,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       print("Error saat proses pembayaran: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memproses penyewaan: ${e.toString()}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Gagal memproses penyewaan: ${e.toString()}'), backgroundColor: Colors.redAccent),
         );
       }
-    } finally {
-       if (mounted) setState(() { _isLoading = false; });
-    }
+    } finally { if (mounted) setState(() { _isLoadingDetails = false; }); }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -161,24 +184,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
       appBar: AppBar(
         title: Text('Pembayaran: ${widget.movie.title}'),
       ),
-      body: _isLoading && _displayedPrice == null // Hanya loading awal
+      body: _isLoadingDetails && _displayedPrice == null 
           ? const Center(child: CircularProgressIndicator())
-          : _error != null && _displayedPrice == null // Error saat init dan tidak ada harga
-              ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text(_error!, style: const TextStyle(color: Colors.red))))
+          : _error != null && _displayedPrice == null
+              ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 16), textAlign: TextAlign.center,)))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Detail Film:', style: theme.textTheme.headlineSmall),
+                      Text('Detail Film:', style: theme.textTheme.headlineSmall?.copyWith(fontSize: 18)),
                       const SizedBox(height: 8),
-                      Text(widget.movie.title, style: theme.textTheme.titleLarge?.copyWith(fontSize: 20)),
+                      Text(widget.movie.title, style: theme.textTheme.titleLarge?.copyWith(fontSize: 22)),
                       if (widget.movie.tagline != null && widget.movie.tagline!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text('"${widget.movie.tagline!}"', style: theme.textTheme.titleMedium?.copyWith(fontStyle: FontStyle.italic)),
                         ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
+
                       Text('Pilih Durasi Sewa:', style: theme.textTheme.headlineSmall?.copyWith(fontSize: 18)),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<RentalDurationOption>(
@@ -186,7 +210,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           labelText: 'Durasi Penyewaan',
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           filled: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)
+                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)
                         ),
                         value: _selectedRentalDuration,
                         items: SUPPORTED_RENTAL_DURATIONS.map((RentalDurationOption option) {
@@ -195,8 +219,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             child: Text(option.label),
                           );
                         }).toList(),
-                        onChanged: (RentalDurationOption? newValue) {
+                        onChanged: _isCalculatingPrice ? null : (RentalDurationOption? newValue) {
                           if (newValue != null) {
+                            // Panggil _calculateBasePriceIdrAndUpdateDisplay saat durasi berubah
+                            _calculateBasePriceIdrAndUpdateDisplay(newValue);
+                            // Update state _selectedRentalDuration juga penting
                             setState(() {
                               _selectedRentalDuration = newValue;
                             });
@@ -204,7 +231,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         },
                       ),
                       const SizedBox(height: 24),
-                      Text('Mata Uang & Harga:', style: theme.textTheme.headlineSmall),
+
+                      Text('Mata Uang & Harga:', style: theme.textTheme.headlineSmall?.copyWith(fontSize: 18)),
                       const SizedBox(height: 10),
                       if (_availableCurrencies.isNotEmpty)
                         DropdownButtonFormField<String>(
@@ -212,18 +240,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             labelText: 'Pilih Mata Uang',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             filled: true,
+                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)
                           ),
                           value: _selectedCurrencyCode,
                           items: _availableCurrencies.map((SupportedCountry country) {
                             return DropdownMenuItem<String>(
                               value: country.currencyCode,
-                              child: Text('${country.countryName} (${country.currencyCode}) - ${country.currencySymbol}'),
+                              child: Text('${country.countryName} (${country.currencyCode}) - ${country.currencySymbol}', overflow: TextOverflow.ellipsis,),
                             );
                           }).toList(),
-                          onChanged: (String? newValue) {
+                          onChanged: _isCalculatingPrice ? null : (String? newValue) {
                             if (newValue != null) {
-                              final selected = _availableCurrencies.firstWhere((c) => c.currencyCode == newValue);
-                              _updatePriceForCurrency(selected.currencyCode, selected.currencySymbol);
+                              final selectedCountryData = _availableCurrencies.firstWhere((c) => c.currencyCode == newValue);
+                              _updateDisplayedPriceForCurrency(selectedCountryData.currencyCode, selectedCountryData.currencySymbol);
                             }
                           },
                         ),
@@ -235,31 +264,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           child: Column(
                             children: [
                                Text('Total Pembayaran:', style: theme.textTheme.titleMedium),
-                              _isLoading && _displayedPrice != null // Loading saat ganti mata uang
-                                ? const Padding(padding: EdgeInsets.symmetric(vertical: 8.0), child: CircularProgressIndicator(strokeWidth: 2))
+                               const SizedBox(height: 8),
+                              _isCalculatingPrice 
+                                ? const CircularProgressIndicator(strokeWidth: 2)
                                 : _displayedPrice != null
                                   ? Text(
-                                      '${_selectedCurrencySymbol} ${_displayedPrice?.toStringAsFixed(2)}', // Format 2 desimal
-                                      style: theme.textTheme.headlineSmall?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.bold),
+                                      // Menggunakan NumberFormat untuk format mata uang
+                                      NumberFormat.currency(
+                                        locale: _selectedCurrencyCode == 'IDR' ? 'id_ID' : 'en_US', // Sesuaikan locale
+                                        symbol: '$_selectedCurrencySymbol ',
+                                        decimalDigits: (_selectedCurrencyCode == 'IDR' || _selectedCurrencyCode == 'JPY') ? 0 : 2,
+                                      ).format(_displayedPrice),
+                                      style: theme.textTheme.headlineSmall?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.bold, fontSize: 22),
                                     )
-                                  : const Text('Harga tidak tersedia', style: TextStyle(color: Colors.orange)),
-                              if(_error != null && _displayedPrice != null) // error saat ganti mata uang
-                                Padding(
-                                  padding: const EdgeInsets.only(top:8.0),
-                                  child: Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
-                                ),
+                                  : _error != null 
+                                      ? Text(_error!, style: const TextStyle(color: Colors.redAccent))
+                                      : const Text('Harga tidak tersedia', style: TextStyle(color: Colors.orangeAccent)),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
-                        icon: _isLoading ? Container(width: 20, height: 20, margin: const EdgeInsets.only(right:8), child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.payment),
-                        label: Text(_isLoading ? 'Memproses...' : 'Bayar Sekarang'),
-                        style: theme.elevatedButtonTheme.style?.copyWith(
-                          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 16)),
-                        ),
-                        onPressed: _isLoading ? null : _processPayment,
+                        icon: _isLoadingDetails ? Container(width: 20, height: 20, margin: const EdgeInsets.only(right:8), child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.payment_rounded),
+                        label: Text(_isLoadingDetails ? 'Memproses...' : 'Bayar Sekarang'),
+                        style: theme.elevatedButtonTheme.style,
+                        onPressed: _isLoadingDetails || _isCalculatingPrice ? null : _processPayment,
                       ),
                     ],
                   ),

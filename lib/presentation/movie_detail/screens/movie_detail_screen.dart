@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/movie_detail_model.dart';
 import '../../../data/sources/remote/tmdb_api_service.dart';
-import '../../../data/sources/local/preferences_helper.dart'; // Untuk userId dan wishlist
-import '../../../data/sources/local/database_helper.dart'; // Untuk cek status rental
-import '../../payment/screens/payment_screen.dart'; // Halaman pembayaran (pastikan path ini benar)
+import '../../../data/sources/local/preferences_helper.dart'; 
+import '../../../data/sources/local/database_helper.dart'; 
+import '../../payment/screens/payment_screen.dart'; 
 import 'package:url_launcher/url_launcher.dart';
 
 class MovieDetailScreen extends StatefulWidget {
@@ -23,8 +23,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   bool _isInWishlist = false;
   bool _isCurrentlyRented = false;
 
-  final String _rentalPrice = 'Rp 25.000';
-  final String _rentalDuration = '48 Jam';
+  final String _rentalPrice = 'Rp 15.000/Hari';
+  final String _rentalDuration = '24 Jam - 1 Minggu';
 
   @override
   void initState() {

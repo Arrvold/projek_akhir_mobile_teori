@@ -1,5 +1,6 @@
-const double RENTAL_PRICE_IDR = 25000.0;
-const int RENTAL_DURATION_HOURS = 48;
+
+const double BASE_RENTAL_PRICE_PER_DAY_IDR = 15000.0; // Contoh: Rp15.000 per hari
+const int RENTAL_DURATION_HOURS = 48; // Ini bisa jadi durasi default awal
 
 // Mata uang dasar dan fallback
 const String BASE_CURRENCY_CODE = 'IDR';
