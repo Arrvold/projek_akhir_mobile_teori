@@ -13,6 +13,7 @@ class MovieDetailModel {
   final String? tagline;
   final List<GenreModel> genres; // Daftar objek GenreModel
   // Anda bisa menambahkan properti lain seperti production_companies, videos, credits, dll.
+  final String? homepage;
 
   MovieDetailModel({
     required this.id,
@@ -26,6 +27,7 @@ class MovieDetailModel {
     this.runtime,
     this.tagline,
     required this.genres,
+    this.homepage,
   });
 
   factory MovieDetailModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +48,7 @@ class MovieDetailModel {
       runtime: json['runtime'] as int?,
       tagline: json['tagline'],
       genres: parsedGenres,
+      homepage: json['homepage'] as String?,
     );
   }
 

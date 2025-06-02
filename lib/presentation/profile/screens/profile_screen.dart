@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../history/screens/rental_history_screen.dart'; // <-- IMPORT BARU
+import '../../history/screens/rental_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -10,21 +10,21 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile Saya'),
-        // backgroundColor: theme.primaryColor, // Jika ingin konsisten
+        backgroundColor: theme.primaryColor, // Jika ingin konsisten
       ),
       body: SingleChildScrollView(
-        // Agar bisa scroll jika konten banyak
         padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start, // Ubah ke start
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 20), // Spasi dari atas
               const CircleAvatar(
                 radius: 60,
-                // backgroundImage: AssetImage('assets/images/profile_picture.jpg'),
-                child: Icon(Icons.person, size: 60),
+                backgroundImage: AssetImage(
+                  'assets/images/profile_picture.jpg',
+                ),
               ),
               const SizedBox(height: 20),
               Text(

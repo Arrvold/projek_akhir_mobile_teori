@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../data/models/movie_model.dart'; // Import MovieModel
-// Anda mungkin ingin menggunakan cached_network_image untuk performa lebih baik
-// import 'package:cached_network_image/cached_network_image.dart';
+import '../../data/models/movie_model.dart'; 
 
 class MovieCard extends StatelessWidget {
   final MovieModel movie;
@@ -24,21 +22,20 @@ class MovieCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        clipBehavior: Clip.antiAlias, // Agar gambar tidak keluar dari rounded corner Card
+        clipBehavior: Clip.antiAlias, 
         elevation: 3.0,
-        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0), // Sedikit ubah margin
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)), // Bentuk kartu
-        child: SizedBox( // Gunakan SizedBox untuk mengatur ukuran kartu secara eksplisit
+        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0), 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)), 
+        child: SizedBox( 
           width: width,
           height: height,
           child: Stack(
-            fit: StackFit.expand, // Agar gambar mengisi Stack
+            fit: StackFit.expand, 
             children: [
-              // Gunakan Image.network atau CachedNetworkImage
+
               Image.network(
                 movie.fullPosterUrl,
                 fit: BoxFit.cover,
-                // Error builder jika gambar gagal dimuat
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[300],
