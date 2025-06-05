@@ -49,7 +49,7 @@ class MovieModel {
   }
 }
 
-// Model untuk respons API yang berisi daftar film dan paginasi
+
 class MovieResponse {
   final int page;
   final List<MovieModel> results;

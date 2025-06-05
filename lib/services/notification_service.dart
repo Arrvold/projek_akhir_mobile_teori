@@ -242,10 +242,9 @@ class NotificationService {
 // Ini harus top-level function atau static method
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
-  // handle action
+
   print(
     'Notification Tapped in Background: payload=${notificationResponse.payload}',
   );
-  // Anda bisa melakukan sesuatu di sini, tapi navigasi langsung mungkin rumit
-  // Biasanya payload digunakan saat aplikasi dibuka kembali.
+
 }

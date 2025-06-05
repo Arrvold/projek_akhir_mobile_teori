@@ -1,10 +1,10 @@
-// lib/data/models/rental_model.dart
+
 class RentalModel {
   final int? id;
-  final int userId; // Akan digunakan jika Anda punya sistem user ID dari database
+  final int userId; 
   final int movieId;
-  final String movieTitle; // Simpan judul untuk kemudahan display
-  final String moviePosterPath; // Simpan poster path
+  final String movieTitle; 
+  final String moviePosterPath; 
   final DateTime rentalStartUtc;
   final DateTime rentalEndUtc;
   final double pricePaid;
@@ -25,7 +25,7 @@ class RentalModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': userId, // Pastikan Anda memiliki cara mendapatkan user ID yang login
+      'user_id': userId,
       'movie_id': movieId,
       'movie_title': movieTitle,
       'movie_poster_path': moviePosterPath,

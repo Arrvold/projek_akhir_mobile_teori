@@ -8,13 +8,9 @@ import 'presentation/auth/screens/register_screen.dart';
 import 'presentation/main_layout/main_screen.dart'; // Halaman utama setelah login
 import 'data/sources/local/preferences_helper.dart'; // Untuk cek status login
 import 'services/notification_service.dart';
-// import 'services/time_service.dart';
 
 Future<void> main() async {
-  // Pastikan semua binding widget Flutter sudah siap sebelum menjalankan kode async
   WidgetsFlutterBinding.ensureInitialized();
-  // Inisialisasi data format tanggal untuk lokal 'id_ID'
-  // Argumen kedua (filePath) bisa null untuk menggunakan data default yang disertakan paket.
   await initializeDateFormatting('id_ID', null); // <-- TAMBAHKAN BARIS INI
 
   // Inisialisasi data zona waktu untuk package timezone
@@ -26,9 +22,6 @@ Future<void> main() async {
     print("Zona waktu lokal diset untuk package timezone: $currentTimeZone");
   } catch (e) {
     print("Gagal mengatur zona waktu lokal untuk package timezone: $e. Menggunakan UTC sebagai fallback.");
-    // Jika gagal, tz.local akan default ke UTC atau zona waktu sistem (tergantung platform)
-    // Untuk konsistensi, bisa set ke UTC jika gagal.
-    // tz.setLocalLocation(tz.getLocation('Etc/UTC'));
   }
 
 

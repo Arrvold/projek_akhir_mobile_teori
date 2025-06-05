@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../data/sources/local/database_helper.dart'; // Pastikan path ini benar
-import '../../../data/sources/local/preferences_helper.dart'; // Pastikan path ini benar
-import '../../../core/utils/encryption_helper.dart'; // Pastikan path ini benar
-import '../../../data/models/user_model.dart'; // Pastikan path ini benar
+import '../../../data/sources/local/database_helper.dart'; 
+import '../../../data/sources/local/preferences_helper.dart'; 
+import '../../../core/utils/encryption_helper.dart'; 
+import '../../../data/models/user_model.dart'; 
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberMe();
   }
 
-  // Fungsi untuk memuat status "Remember Me" dan username jika ada
+  // Fungsi "Remember Me" dan username
   Future<void> _loadRememberMe() async {
     final prefs = await SharedPreferences.getInstance();
     bool rememberedStatus = prefs.getBool('rememberMeStatus') ?? false;
@@ -40,14 +40,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Fungsi untuk menyimpan status "Remember Me"
+  // Fungsi menyimpan status "Remember Me"
   Future<void> _saveRememberMeStatus() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('rememberMeStatus', _rememberMe);
     if (_rememberMe) {
       await prefs.setString('rememberedUsername', _usernameController.text.trim());
     } else {
-      await prefs.remove('rememberedUsername'); // Hapus jika tidak dicentang
+      await prefs.remove('rememberedUsername'); 
     }
   }
 
@@ -94,8 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Jika username dan password benar:
-      // PASTIKAN user.id TIDAK NULL SEBELUM MENYIMPAN
       if (user.id == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -104,22 +102,22 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() { _isLoading = false; });
           return;
       }
-      // SIMPAN userId dan username ke SharedPreferences
+      // menyimpan userId dan username ke SharedPreferences
       await PreferencesHelper.saveUserSession(user.id!, user.username);
 
-      await _saveRememberMeStatus(); // Fungsi "Remember Me" Anda
+      await _saveRememberMeStatus();
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Login berhasil! Selamat datang, ${user.username}.'), // Gunakan user.username
+            content: Text('Login berhasil! Selamat datang, ${user.username}.'),
             backgroundColor: Colors.green),
       );
       
       Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
     }
-    if (mounted && _isLoading && Navigator.canPop(context) == false ) { // Hanya set false jika tidak ada navigasi
+    if (mounted && _isLoading && Navigator.canPop(context) == false ) {
          setState(() { _isLoading = false; });
     }
   }
@@ -144,7 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  // Anda bisa menambahkan logo atau gambar di sini
                   // FlutterLogo(size: 80),
                   // SizedBox(height: 30),
                   Text(
@@ -195,13 +192,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 10), // Kurangi spasi sedikit
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Checkbox( // Ganti Switch dengan Checkbox untuk tampilan umum
+                          Checkbox(
                             value: _rememberMe,
                             onChanged: (value) {
                               if (value != null) {
@@ -211,9 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                             },
                             activeColor: Theme.of(context).primaryColor,
-                            visualDensity: VisualDensity.compact, // Agar lebih rapat
+                            visualDensity: VisualDensity.compact,
                           ),
-                          GestureDetector( // Agar teks bisa diklik juga
+                          GestureDetector(
                             onTap: () {
                                 setState(() {
                                   _rememberMe = !_rememberMe;
@@ -223,15 +220,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // Logika Lupa Password (jika ada)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Fitur Lupa Password belum tersedia.')),
-                          );
-                        },
-                        child: const Text('Forgot Password?'),
-                      ),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     // Logika Lupa Password (jika ada)
+                      //     ScaffoldMessenger.of(context).showSnackBar(
+                      //       const SnackBar(content: Text('Fitur Lupa Password belum tersedia.')),
+                      //     );
+                      //   },
+                      //   child: const Text('Forgot Password?'),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 24),

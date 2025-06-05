@@ -1,7 +1,7 @@
 class UserModel {
   final int? id;
   final String username;
-  final String passwordHash; // Kita akan menyimpan hash password
+  final String passwordHash; 
   final String? mobileNumber;
 
   UserModel({

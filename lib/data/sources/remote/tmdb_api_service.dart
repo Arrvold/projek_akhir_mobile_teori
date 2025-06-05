@@ -1,24 +1,20 @@
-import 'dart:convert'; // Untuk json.decode
-import 'package:http/http.dart' as http; // Untuk melakukan HTTP requests
+import 'dart:convert'; 
+import 'package:http/http.dart' as http; 
 import 'package:projek_akhir_2/data/models/movie_detail_model.dart';
-import '../../models/movie_model.dart'; // Model untuk data film
-import '../../models/genre_model.dart'; // Model untuk data genre
+import '../../models/movie_model.dart'; 
+import '../../models/genre_model.dart'; 
 
 class TmdbApiService {
-  // ===========================================================================
-  // !! GANTI DENGAN API KEY TMDB ANDA SENDIRI !!
-  // Anda bisa mendapatkan API Key dari: https://www.themoviedb.org/settings/api
-  // SANGAT DISARANKAN MENGGUNAKAN flutter_dotenv untuk menyimpan API Key ini.
-  // Contoh: static final String _apiKey = dotenv.env['TMDB_API_KEY'] ?? 'DEFAULT_FALLBACK_KEY';
+
   static const String _apiKey = 'd68807aabcd436f813f5d0e5f5eeebf7';
-  // ===========================================================================
+
 
   static const String _baseUrl = 'https://api.themoviedb.org/3';
-  static const String _defaultLanguage = 'id-ID'; // Bahasa default untuk hasil
+  static const String _defaultLanguage = 'id-ID'; 
   static const String _defaultRegion =
-      'ID'; // Region default untuk prioritas rilis
+      'ID'; 
 
-  // Helper method untuk menangani respons dan error umum
+  // Helper untuk menangani respons dan error umum
   Future<dynamic> _handleResponse(
     http.Response response,
     String contextMessage,
@@ -33,19 +29,18 @@ class TmdbApiService {
     }
   }
 
-  /// Mengambil daftar film yang sedang trending hari ini.
+  /// Daftar film yang sedang trending hari ini
   Future<List<MovieModel>> getTrendingMovies() async {
     final url = Uri.parse(
       '$_baseUrl/trending/movie/day?api_key=$_apiKey&language=$_defaultLanguage&region=$_defaultRegion',
     );
-    print('Fetching Trending Movies: $url'); // Untuk debugging
+    print('Fetching Trending Movies: $url'); 
     final response = await http.get(url);
     final data = await _handleResponse(response, 'film trending');
     return MovieResponse.fromJson(data).results;
   }
 
   /// Mengambil daftar film populer.
-  /// [page]: Nomor halaman yang ingin diambil (default 1).
   Future<List<MovieModel>> getPopularMovies({int page = 1}) async {
     final url = Uri.parse(
       '$_baseUrl/movie/popular?api_key=$_apiKey&page=$page&language=$_defaultLanguage&region=$_defaultRegion',
@@ -56,16 +51,12 @@ class TmdbApiService {
     return MovieResponse.fromJson(data).results;
   }
 
-  /// Mengambil daftar film berdasarkan kriteria "discover".
-  /// Berguna untuk bagian "Jelajahi Semua Film".
-  /// [page]: Nomor halaman.
-  /// [withGenres]: ID genre (dipisahkan koma jika lebih dari satu) untuk filter.
-  /// [sortBy]: Kriteria pengurutan (default: 'primary_release_date.desc' atau 'popularity.desc' jika ada genre).
+
   Future<List<MovieModel>> getDiscoverMovies({
     int page = 3,
-    String? withGenres, // ID genre, contoh: "28" atau "28,12"
+    String? withGenres, 
     String sortBy =
-        'primary_release_date.desc', // Default ke film terbaru jika tidak ada genre
+        'primary_release_date.desc', 
   }) async {
     String genreQuery =
         withGenres != null && withGenres.isNotEmpty

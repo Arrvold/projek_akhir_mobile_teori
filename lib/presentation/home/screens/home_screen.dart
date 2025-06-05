@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TmdbApiService _apiService = TmdbApiService(); // Instance service API
+  final TmdbApiService _apiService = TmdbApiService();
   final TextEditingController _searchController = TextEditingController();
 
   List<MovieModel> _trendingMovies = [];
@@ -37,17 +37,17 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isGenreFilterVisible = false;
   String? _loggedInUsername;
 
-  // Untuk Shake Detector
+  //Shake Detector
   StreamSubscription? _accelerometerSubscription;
-  static const double _shakeThreshold = 12.0; // kekuatan goyangan
-  static const int _shakeSlopTimeMS = 500; // Jeda waktu
+  static const double _shakeThreshold = 12.0; 
+  static const int _shakeSlopTimeMS = 500;
   static const int _shakeCountResetTimeMS =
       3000;
 
   int _shakeTimestamp = DateTime.now().millisecondsSinceEpoch;
   int _shakeCount = 0;
   bool _isSuggestingMovie =
-      false; //mencegah banyak suggestion
+      false;
 
   @override
   void initState() {
@@ -62,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await _fetchAllData();       
   }
 
-  // Fungsi untuk memuat nama pengguna dari SharedPreferences
   Future<void> _loadLoggedInUsername() async {
     String? username = await PreferencesHelper.getLoggedInUsername();
     if (mounted) {
@@ -84,10 +83,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _accelerometerSubscription = userAccelerometerEventStream(
       samplingPeriod:
           SensorInterval
-              .uiInterval, // Interval update sensor yang sesuai untuk UI
+              .uiInterval,
     ).listen((UserAccelerometerEvent event) {
       if (_isSuggestingMovie)
-        return; // Jika sedang memproses suggestion, abaikan goyangan lain
+        return; 
 
       double x = event.x;
       double y = event.y;
@@ -99,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (gForce > _shakeThreshold) {
         var now = DateTime.now().millisecondsSinceEpoch;
-        // Jika goyangan terjadi setelah _shakeSlopTimeMS dari goyangan sebelumnya
         if (_shakeTimestamp + _shakeSlopTimeMS > now) {
           return;
         }
@@ -124,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted || _isSuggestingMovie) return;
 
     setState(() {
-      _isSuggestingMovie = true; // Tandai sedang memproses
+      _isSuggestingMovie = true;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -135,17 +133,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     try {
-      // Ambil daftar film dari "explore" atau "popular" sebagai basis
-      // Atau bisa juga panggil endpoint discover dengan page acak
       List<MovieModel> basisFilm =
           _exploreMovies.isNotEmpty
               ? _exploreMovies
               : (_popularMovies.isNotEmpty ? _popularMovies : []);
 
       if (basisFilm.isEmpty) {
-        // Jika belum ada data, coba fetch ulang explore movies
-        await _fetchExploreMovies(); // Ambil data terbaru jika kosong
-        basisFilm = _exploreMovies; // Gunakan data yang baru di-fetch
+        await _fetchExploreMovies(); 
+        basisFilm = _exploreMovies;
       }
 
       if (basisFilm.isNotEmpty) {
@@ -169,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      height: 150, // Tinggi gambar di dialog
+                      height: 150,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
@@ -203,8 +198,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ElevatedButton(
                     child: const Text('Lihat Detail'),
                     onPressed: () {
-                      Navigator.of(context).pop(); // Tutup dialog dulu
-                      _navigateToDetail(randomMovie); // Navigasi ke detail
+                      Navigator.of(context).pop(); 
+                      _navigateToDetail(randomMovie);
                     },
                   ),
                 ],
@@ -337,21 +332,21 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     setState(() {
       _isSearching = true;
-      // _isLoadingExplore = true; // Atau loading state khusus search
+      _isLoadingExplore = true; 
     });
     try {
       final movies = await _apiService.searchMovies(query);
       if (mounted) {
         setState(() {
           _searchResults = movies;
-          // _isLoadingExplore = false;
+          _isLoadingExplore = false;
         });
       }
     } catch (e) {
       if (mounted) _showErrorSnackbar('Gagal mencari film: ${e.toString()}');
       print('Error search: $e');
       if (mounted) {
-        // setState(() { _isLoadingExplore = false; });
+        setState(() { _isLoadingExplore = false; });
       }
     }
   }
@@ -363,7 +358,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToDetail(MovieModel movie) {
-    // Kirim MovieModel atau hanya movie.id, tergantung kebutuhan MovieDetailScreen
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -409,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: const Icon(Icons.clear),
                               onPressed: () {
                                 _searchController.clear();
-                                _performSearch(''); // Hapus hasil pencarian
+                                _performSearch(''); 
                               },
                             )
                             : null,
@@ -470,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
         const SizedBox(height: 24),
 
-        // 4. List Film Populer (Horizontal)
+        //List Film Populer
         _buildSectionTitle('Paling Populer'),
         _isLoadingPopular
             ? _buildLoadingIndicator()
@@ -479,14 +473,14 @@ class _HomeScreenState extends State<HomeScreen> {
             : _buildHorizontalMovieList(_popularMovies),
         const SizedBox(height: 24),
 
-        // 5. List "Jelajahi Semua Film" (Vertikal dengan GridView)
+        //List "Jelajahi Semua Film" (Vertikal dengan GridView)
         _buildSectionTitle(
           _selectedGenre != null
               ? 'Film Genre: ${_selectedGenre!.name}'
               : 'Jelajahi Semua Film',
         ),
 
-        // 3. Tombol dan Daftar Filter Genre yang Bisa Disembunyikan/Ditampilkan
+        //Tombol dan Daftar Filter Genre yang Bisa Disembunyikan/Ditampilkan
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
@@ -495,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildSectionTitle(
                 'Genre Film',
                 noPadding: true,
-              ), // Section title tanpa padding default
+              ),
               TextButton.icon(
                 icon: Icon(
                   _isGenreFilterVisible
@@ -542,17 +536,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               label: Text(genre.name),
                               selected: isCurrentlySelected,
                               onSelected: (bool _) {
-                                // Parameter boolean di sini menandakan chip ini *menjadi* terpilih
+      
                                 setState(() {
                                   if (isCurrentlySelected) {
-                                    // Jika chip yang sudah terpilih diklik lagi, deselect (hapus filter)
+                                    
                                     _selectedGenre = null;
                                   } else {
-                                    // Jika chip lain yang diklik, pilih chip tersebut
+                                    
                                     _selectedGenre = genre;
                                   }
-                                  // Opsional: Sembunyikan filter setelah genre dipilih/dihapus
-                                  // _isGenreFilterVisible = false;
+
                                 });
                                 _fetchExploreMovies(
                                   genreId: _selectedGenre?.id.toString(),
@@ -570,12 +563,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
         ),
-        // Jika tidak ada filter genre visible, beri sedikit spasi agar tidak terlalu rapat
         if (!_isGenreFilterVisible) const SizedBox(height: 8),
-        const SizedBox(height: 16), // Spasi sebelum bagian berikutny
+        const SizedBox(height: 16), 
 
         _isLoadingExplore
-            ? _buildLoadingIndicator(height: 300) // Lebih tinggi karena grid
+            ? _buildLoadingIndicator(height: 300)
             : _exploreMovies.isEmpty
             ? _buildEmptyState(
               _selectedGenre != null
@@ -622,7 +614,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHorizontalMovieList(List<MovieModel> movies) {
     return SizedBox(
-      height: 220, // Sesuaikan tinggi
+      height: 220,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: movies.length,
@@ -635,8 +627,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: MovieCard(
               movie: movie,
-              width: 140, // Sesuaikan lebar
-              height: 210, // Sesuaikan tinggi
+              width: 140, 
+              height: 210, 
               onTap: () => _navigateToDetail(movie),
             ),
           );
@@ -671,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio:
-              (140 / 210), // Sesuaikan dengan rasio MovieCard (width / height)
+              (140 / 210), 
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
         ),
@@ -679,8 +671,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final movie = movies[index];
           return MovieCard(
             movie: movie,
-            width: double.infinity, // Biarkan GridView yang mengatur
-            height: double.infinity, // Biarkan GridView yang mengatur
+            width: double.infinity, 
+            height: double.infinity, 
             onTap: () => _navigateToDetail(movie),
           );
         },

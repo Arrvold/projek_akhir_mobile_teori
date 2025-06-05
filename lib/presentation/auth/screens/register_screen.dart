@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/user_model.dart'; // Pastikan path ini benar
-import '../../../data/sources/local/database_helper.dart'; // Pastikan path ini benar
-import '../../../core/utils/encryption_helper.dart'; // Pastikan path ini benar
+import '../../../data/models/user_model.dart'; 
+import '../../../data/sources/local/database_helper.dart'; 
+import '../../../core/utils/encryption_helper.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,7 +18,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  bool _isLoading = false; // State untuk loading
+  bool _isLoading = false; 
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -35,51 +35,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _isLoading = true; // Mulai loading
+        _isLoading = true; 
       });
 
       String username = _usernameController.text.trim();
       String mobileNumber = _mobileNumberController.text.trim();
       String password = _passwordController.text;
 
-      // 1. Cek apakah username sudah ada
+      //Cek apakah username sudah ada
       bool userExists = await DatabaseHelper.instance.checkIfUserExists(username);
 
       if (userExists) {
-        if (mounted) { // Cek apakah widget masih terpasang
+        if (mounted) { 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text('Username "$username" sudah digunakan.'),
                 backgroundColor: Colors.red),
           );
         }
-        setState(() { _isLoading = false; }); // Selesai loading
+        setState(() { _isLoading = false; }); 
         return;
       }
 
-      // 2. Enkripsi password
+      //Enkripsi password
       String hashedPassword = await EncryptionHelper.hashPassword(password);
 
-      // 3. Buat UserModel
+      //UserModel
       UserModel newUser = UserModel(
         username: username,
         passwordHash: hashedPassword,
-        mobileNumber: mobileNumber.isNotEmpty ? mobileNumber : null, // Simpan null jika kosong
+        mobileNumber: mobileNumber.isNotEmpty ? mobileNumber : null,
       );
 
-      // 4. Simpan ke database
+      //Simpan ke database
       try {
         await DatabaseHelper.instance.insertUser(newUser);
-        if (mounted) { // Cek apakah widget masih terpasang
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Registrasi berhasil! Silakan login.'),
                 backgroundColor: Colors.green),
           );
-          Navigator.pop(context); // Kembali ke halaman login
+          Navigator.pop(context); 
         }
       } catch (e) {
-        if (mounted) { // Cek apakah widget masih terpasang
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text('Registrasi gagal: ${e.toString()}'),
@@ -87,9 +87,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         }
       } finally {
-        if (mounted) { // Cek apakah widget masih terpasang
+        if (mounted) { 
           setState(() {
-            _isLoading = false; // Selesai loading
+            _isLoading = false;
           });
         }
       }
@@ -154,7 +154,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icon(Icons.phone_outlined),
                     ),
                     keyboardType: TextInputType.phone,
-                    // Validator bisa ditambahkan jika nomor HP wajib atau format tertentu
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -221,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       const Text("Already have an account?"),
                       TextButton(
-                        onPressed: _isLoading ? null : () { // Disable tombol jika sedang loading
+                        onPressed: _isLoading ? null : () {
                           Navigator.pop(context);
                         },
                         child: const Text('Sign In'),
