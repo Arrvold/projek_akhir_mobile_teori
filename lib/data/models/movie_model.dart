@@ -64,14 +64,16 @@ class MovieResponse {
   });
 
   factory MovieResponse.fromJson(Map<String, dynamic> json) {
-    var list = json['results'] as List;
-    List<MovieModel> moviesList = list.map((i) => MovieModel.fromJson(i)).toList();
+    var list = json['results'] as List?;
+    List<MovieModel> moviesList = list != null 
+        ? list.map((i) => MovieModel.fromJson(i)).toList()
+        : [];
 
     return MovieResponse(
-      page: json['page'],
+      page: json['page'] ?? 1,
       results: moviesList,
-      totalPages: json['total_pages'],
-      totalResults: json['total_results'],
+      totalPages: json['total_pages'] ?? 1,
+      totalResults: json['total_results'] ?? 0,
     );
   }
 }

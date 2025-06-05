@@ -52,24 +52,16 @@ class TmdbApiService {
   }
 
 
-  Future<List<MovieModel>> getDiscoverMovies({
-    int page = 3,
+  Future<MovieResponse> getDiscoverMoviesResponse({
+    int page = 1,
     String? withGenres, 
     String sortBy =
         'primary_release_date.desc', 
   }) async {
-    String genreQuery =
-        withGenres != null && withGenres.isNotEmpty
-            ? '&with_genres=$withGenres'
-            : '';
-
-    // Logika untuk menentukan kriteria urut:
-    // Jika ada filter genre, biasanya lebih baik diurutkan berdasarkan popularitas dalam genre tsb.
-    // Jika tidak ada filter genre, defaultnya adalah yang terbaru (sesuai parameter sortBy).
+    String genreQuery = withGenres != null && withGenres.isNotEmpty ? '&with_genres=$withGenres' : '';
     String finalSortBy = sortBy;
     if (withGenres != null && withGenres.isNotEmpty) {
-      finalSortBy =
-          'popularity.desc'; // Jika ada genre, prioritaskan popularitas
+      finalSortBy = 'popularity.desc';
     }
 
     final url = Uri.parse(
@@ -78,15 +70,15 @@ class TmdbApiService {
       '&page=$page'
       '$genreQuery'
       '&sort_by=$finalSortBy'
-      '&include_adult=false' // Selalu filter konten dewasa
+      '&include_adult=false'
       '&language=$_defaultLanguage'
       '&region=$_defaultRegion'
-      '&vote_count.gte=50', // Hanya film dengan minimal 50 vote (opsional, agar rating lebih reliable)
+      '&vote_count.gte=50',
     );
     print('Fetching Discover Movies: $url');
     final response = await http.get(url);
     final data = await _handleResponse(response, 'film jelajah (discover)');
-    return MovieResponse.fromJson(data).results;
+    return MovieResponse.fromJson(data);
   }
 
   /// Mengambil daftar semua genre film yang tersedia.
