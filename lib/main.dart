@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:timezone/data/latest.dart' as tzdata; // Untuk notifikasi terjadwal
-import 'package:timezone/timezone.dart' as tz;       // Untuk notifikasi terjadwal
+import 'package:timezone/data/latest.dart' as tzdata; 
+import 'package:timezone/timezone.dart' as tz;      
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'presentation/splash/screens/splash_screen.dart';
 import 'presentation/auth/screens/login_screen.dart';
 import 'presentation/auth/screens/register_screen.dart';
-import 'presentation/main_layout/main_screen.dart'; // Halaman utama setelah login
-import 'data/sources/local/preferences_helper.dart'; // Untuk cek status login
+import 'presentation/main_layout/main_screen.dart';
 import 'services/notification_service.dart';
 
 Future<void> main() async {
@@ -30,14 +30,13 @@ Future<void> main() async {
   print("MAIN.DART: Notification service initialized.");
 
   // Cek apakah pengguna sudah login sebelumnya
-  bool isLoggedIn = await PreferencesHelper.isUserLoggedIn();
-  runApp(MyApp(isLoggedIn: isLoggedIn));
+  // bool isLoggedIn = await PreferencesHelper.isUserLoggedIn();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final bool isLoggedIn;
 
-  const MyApp({super.key, required this.isLoggedIn});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,16 +44,16 @@ class MyApp extends StatelessWidget {
       title: 'Sewa Film App',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
-        primaryColor: Colors.indigo[700], // Definisikan primaryColor juga
+        primaryColor: Colors.indigo[700], 
         scaffoldBackgroundColor: Colors.white,
-        fontFamily: 'Poppins', // Contoh jika Anda ingin menggunakan font kustom
+        fontFamily: 'Poppins', 
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0), // Sedikit lebih bulat
+            borderRadius: BorderRadius.circular(12.0), 
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: Colors.grey[100], // Warna field sedikit lebih terang
+          fillColor: Colors.grey[100], 
           contentPadding: const EdgeInsets.symmetric(
             vertical: 16.0,
             horizontal: 16.0,
@@ -161,8 +160,9 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false, // Hilangkan banner debug
       // Tentukan halaman awal berdasarkan status login
-      initialRoute: isLoggedIn ? '/main' : '/login',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/main': (context) => const MainScreen(),

@@ -21,7 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // === Services & Controllers ===
   final TmdbApiService _apiService = TmdbApiService();
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController(); // Untuk infinite scroll
+  final ScrollController _scrollController =
+      ScrollController(); // Untuk infinite scroll
 
   // === UI State ===
   String? _loggedInUsername;
@@ -93,10 +94,12 @@ class _HomeScreenState extends State<HomeScreen> {
       _isSearching = false;
       _searchResults = [];
     });
-    // Reset paginasi saat refresh total dan fetch halaman pertama explore
-    await _fetchExploreMovies(loadMore: false, genreId: _selectedGenre?.id.toString());
-    
-    // Fetch data lain secara bersamaan untuk efisiensi
+
+    await _fetchExploreMovies(
+      loadMore: false,
+      genreId: _selectedGenre?.id.toString(),
+    );
+
     await Future.wait([
       _fetchTrendingMovies(),
       _fetchPopularMovies(),
@@ -105,15 +108,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300 &&
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 300 &&
         !_isLoadingMoreExplore &&
         _canLoadMoreExplore &&
         !_isSearching) {
-      _fetchExploreMovies(genreId: _selectedGenre?.id.toString(), loadMore: true);
+      _fetchExploreMovies(
+        genreId: _selectedGenre?.id.toString(),
+        loadMore: true,
+      );
     }
   }
 
-  Future<void> _fetchExploreMovies({String? genreId, bool loadMore = false}) async {
+  Future<void> _fetchExploreMovies({
+    String? genreId,
+    bool loadMore = false,
+  }) async {
     if (!mounted) return;
     if (loadMore && (_isLoadingMoreExplore || !_canLoadMoreExplore)) return;
 
@@ -160,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
-  
+
   Future<void> _fetchTrendingMovies() async {
     if (!mounted) return;
     try {
@@ -223,22 +233,24 @@ class _HomeScreenState extends State<HomeScreen> {
       setStateIfMounted(() => _isLoadingExplore = false);
     }
   }
-  
+
   // --- LOGIKA SENSOR GOYANG (SHAKE) ---
 
   void _initShakeDetector() {
     _accelerometerSubscription = userAccelerometerEventStream(
-      samplingPeriod: SensorInterval.uiInterval
+      samplingPeriod: SensorInterval.uiInterval,
     ).listen((UserAccelerometerEvent event) {
       if (_isSuggestingMovie) return;
 
-      double accelerationMagnitude = sqrt(pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2));
+      double accelerationMagnitude = sqrt(
+        pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2),
+      );
 
       if (accelerationMagnitude > _shakeThreshold) {
         var now = DateTime.now().millisecondsSinceEpoch;
         if (_mShakeTimestamp + _shakeSlopTimeMS > now) return;
         if (_mShakeTimestamp + _shakeCountResetTimeMS < now) _mShakeCount = 0;
-        
+
         _mShakeTimestamp = now;
         _mShakeCount++;
         print("Shake detected! Count: $_mShakeCount");
@@ -258,47 +270,73 @@ class _HomeScreenState extends State<HomeScreen> {
     _showErrorSnackbarIfMounted('Mencari film acak untukmu...');
 
     try {
-      List<MovieModel> basisFilm = List.from(_exploreMovies)..addAll(_popularMovies);
+      List<MovieModel> basisFilm = List.from(_exploreMovies)
+        ..addAll(_popularMovies);
       basisFilm.shuffle(); // Acak daftar film
-      
+
       if (basisFilm.isEmpty) {
-        await _fetchExploreMovies(); 
-        basisFilm = _exploreMovies; 
+        await _fetchExploreMovies();
+        basisFilm = _exploreMovies;
       }
 
       if (basisFilm.isNotEmpty) {
-        final randomMovie = basisFilm.first; // Ambil film pertama setelah diacak
+        final randomMovie =
+            basisFilm.first; // Ambil film pertama setelah diacak
         if (mounted) {
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text(randomMovie.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                title: Text(
+                  randomMovie.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      height: 180, width: 120,
+                      height: 180,
+                      width: 120,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(randomMovie.fullPosterUrl, fit: BoxFit.cover,
-                         errorBuilder: (ctx, err, st) => const Center(child: Icon(Icons.movie_creation_outlined, size: 50, color: Colors.grey))
+                        child: Image.network(
+                          randomMovie.fullPosterUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (ctx, err, st) => const Center(
+                                child: Icon(
+                                  Icons.movie_creation_outlined,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
                         ),
-                      )
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    Text(randomMovie.overview, maxLines: 4, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+                    Text(
+                      randomMovie.overview,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14),
+                    ),
                   ],
                 ),
                 actionsAlignment: MainAxisAlignment.spaceBetween,
                 actions: <Widget>[
-                  TextButton(child: const Text('Tutup'), onPressed: () => Navigator.of(context).pop()),
+                  TextButton(
+                    child: const Text('Tutup'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
                   ElevatedButton(
                     child: const Text('Lihat Detail'),
                     onPressed: () {
-                      Navigator.of(context).pop(); 
-                      _navigateToDetail(randomMovie); 
+                      Navigator.of(context).pop();
+                      _navigateToDetail(randomMovie);
                     },
                   ),
                 ],
@@ -307,18 +345,23 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       } else {
-        _showErrorSnackbarIfMounted('Tidak ada film untuk disarankan saat ini.');
+        _showErrorSnackbarIfMounted(
+          'Tidak ada film untuk disarankan saat ini.',
+        );
       }
     } catch (e) {
       _showErrorSnackbarIfMounted('Gagal mendapatkan film acak.');
       print("Error suggesting movie: $e");
     } finally {
-      Future.delayed(const Duration(seconds: 3), () => setStateIfMounted(() => _isSuggestingMovie = false));
+      Future.delayed(
+        const Duration(seconds: 3),
+        () => setStateIfMounted(() => _isSuggestingMovie = false),
+      );
     }
   }
-  
+
   // --- HELPER LAINNYA ---
-  
+
   void _navigateToDetail(MovieModel movie) {
     if (!mounted) return;
     Navigator.push(
@@ -328,19 +371,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   void _showErrorSnackbarIfMounted(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
-  
+
   void setStateIfMounted(VoidCallback fn) {
     if (mounted) setState(fn);
   }
-  
+
   // --- BUILD METHOD DAN WIDGET HELPER ---
 
   @override
@@ -348,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sewa Film App'),
+        title: const Text('MovieLend'),
         automaticallyImplyLeading: false,
       ),
       body: RefreshIndicator(
@@ -363,7 +410,10 @@ class _HomeScreenState extends State<HomeScreen> {
               if (_loggedInUsername != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-                  child: Text('Selamat datang, $_loggedInUsername!', style: theme.textTheme.titleLarge?.copyWith(fontSize: 22)),
+                  child: Text(
+                    'Selamat datang, $_loggedInUsername!',
+                    style: theme.textTheme.titleLarge?.copyWith(fontSize: 22),
+                  ),
                 ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -372,17 +422,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: InputDecoration(
                     hintText: 'Cari judul film...',
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () { _searchController.clear(); _performSearch(''); },
-                    ) : null,
+                    suffixIcon:
+                        _searchController.text.isNotEmpty
+                            ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                _performSearch('');
+                              },
+                            )
+                            : null,
                   ),
                   onSubmitted: _performSearch,
                 ),
               ),
               _isSearching && _searchController.text.isNotEmpty
-                ? _buildSearchResults()
-                : _buildMainContent(theme),
+                  ? _buildSearchResults()
+                  : _buildMainContent(theme),
             ],
           ),
         ),
@@ -398,77 +454,101 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoadingTrending
             ? _buildLoadingIndicator(height: 230)
             : _trendingMovies.isEmpty
-                ? _buildEmptyState('Film trending tidak tersedia.')
-                : CarouselSlider.builder(
-                    itemCount: _trendingMovies.length,
-                    itemBuilder: (context, itemIndex, pageViewIndex) {
-                      final movie = _trendingMovies[itemIndex];
-                      return MovieCard(
-                        movie: movie,
-                        width: MediaQuery.of(context).size.width * 0.75,
-                        height: 230,
-                        onTap: () => _navigateToDetail(movie),
-                      );
-                    },
-                    options: CarouselOptions(
-                      height: 230.0,
-                      autoPlay: true,
-                      enlargeCenterPage: true,
-                      viewportFraction: 0.82,
-                    ),
-                  ),
+            ? _buildEmptyState('Film trending tidak tersedia.')
+            : CarouselSlider.builder(
+              itemCount: _trendingMovies.length,
+              itemBuilder: (context, itemIndex, pageViewIndex) {
+                final movie = _trendingMovies[itemIndex];
+                return MovieCard(
+                  movie: movie,
+                  width: MediaQuery.of(context).size.width * 0.75,
+                  height: 200,
+                  onTap: () => _navigateToDetail(movie),
+                );
+              },
+              options: CarouselOptions(
+                height: 200.0,
+                autoPlay: true,
+                enlargeCenterPage: true,
+                viewportFraction: 0.75,
+              ),
+            ),
         const SizedBox(height: 24),
         _buildSectionTitle('Paling Populer'),
         _isLoadingPopular
             ? _buildLoadingIndicator()
             : _popularMovies.isEmpty
-                ? _buildEmptyState('Film populer tidak tersedia.')
-                : _buildHorizontalMovieList(_popularMovies),
+            ? _buildEmptyState('Film populer tidak tersedia.')
+            : _buildHorizontalMovieList(_popularMovies),
         const SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSectionTitle(_selectedGenre != null ? 'Genre: ${_selectedGenre!.name}' : 'Jelajahi Semua Film', noPadding: true),
+              _buildSectionTitle(
+                _selectedGenre != null
+                    ? 'Genre: ${_selectedGenre!.name}'
+                    : 'Jelajahi Semua Film',
+                noPadding: true,
+              ),
               TextButton.icon(
-                icon: Icon(_isGenreFilterVisible ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
+                icon: Icon(
+                  _isGenreFilterVisible
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                ),
                 label: Text(_isGenreFilterVisible ? 'Sembunyikan' : 'Filter'),
-                onPressed: () => setStateIfMounted(() => _isGenreFilterVisible = !_isGenreFilterVisible),
-              )
+                onPressed:
+                    () => setStateIfMounted(
+                      () => _isGenreFilterVisible = !_isGenreFilterVisible,
+                    ),
+              ),
             ],
           ),
         ),
         Visibility(
           visible: _isGenreFilterVisible,
-          child: _isLoadingGenres
-              ? _buildLoadingIndicator(height: 50)
-              : _genres.isEmpty
+          child:
+              _isLoadingGenres
+                  ? _buildLoadingIndicator(height: 50)
+                  : _genres.isEmpty
                   ? _buildEmptyState('Genre tidak tersedia.', height: 50)
                   : Padding(
-                      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 12.0),
-                      child: Wrap(
-                        spacing: 8.0, runSpacing: 4.0,
-                        children: _genres.map((genre) {
-                          final isCurrentlySelected = _selectedGenre?.id == genre.id;
-                          return ChoiceChip(
-                            label: Text(genre.name),
-                            selected: isCurrentlySelected,
-                            onSelected: (bool _) {
-                              setStateIfMounted(() {
-                                if (isCurrentlySelected) { _selectedGenre = null; } 
-                                else { _selectedGenre = genre; }
-                              });
-                              _fetchExploreMovies(genreId: _selectedGenre?.id.toString());
-                            },
-                            selectedColor: theme.chipTheme.selectedColor,
-                            labelStyle: isCurrentlySelected ? theme.chipTheme.secondaryLabelStyle : theme.chipTheme.labelStyle,
-                            backgroundColor: theme.chipTheme.backgroundColor,
-                            shape: theme.chipTheme.shape as OutlinedBorder?,
-                          );
-                        }).toList(),
-                      ),
+                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 12.0),
+                    child: Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      children:
+                          _genres.map((genre) {
+                            final isCurrentlySelected =
+                                _selectedGenre?.id == genre.id;
+                            return ChoiceChip(
+                              label: Text(genre.name),
+                              selected: isCurrentlySelected,
+                              onSelected: (bool _) {
+                                setStateIfMounted(() {
+                                  if (isCurrentlySelected) {
+                                    _selectedGenre = null;
+                                  } else {
+                                    _selectedGenre = genre;
+                                  }
+                                });
+                                _fetchExploreMovies(
+                                  genreId: _selectedGenre?.id.toString(),
+                                );
+                              },
+                              selectedColor: theme.chipTheme.selectedColor,
+                              labelStyle:
+                                  isCurrentlySelected
+                                      ? theme.chipTheme.secondaryLabelStyle
+                                      : theme.chipTheme.labelStyle,
+                              backgroundColor: theme.chipTheme.backgroundColor,
+                              shape: theme.chipTheme.shape as OutlinedBorder?,
+                            );
+                          }).toList(),
                     ),
+                  ),
         ),
         const SizedBox(height: 16),
         _isLoadingExplore
@@ -484,12 +564,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return _buildVerticalMovieGrid(_searchResults, isSearch: true);
   }
-  
+
   Widget _buildSectionTitle(String title, {bool noPadding = false}) {
-    final titleWidget = Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18));
+    final titleWidget = Text(
+      title,
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 18),
+    );
     if (noPadding) return titleWidget;
     return Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 12.0),
+      padding: const EdgeInsets.only(
+        left: 16.0,
+        right: 16.0,
+        top: 8.0,
+        bottom: 12.0,
+      ),
       child: titleWidget,
     );
   }
@@ -504,18 +592,28 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
         itemBuilder: (context, index) {
           final movie = movies[index];
-          return MovieCard(movie: movie, width: 140, height: 210, onTap: () => _navigateToDetail(movie));
+          return MovieCard(
+            movie: movie,
+            width: 140,
+            height: 210,
+            onTap: () => _navigateToDetail(movie),
+          );
         },
       ),
     );
   }
 
-  Widget _buildVerticalMovieGrid(List<MovieModel> movies, {bool isSearch = false}) {
+  Widget _buildVerticalMovieGrid(
+    List<MovieModel> movies, {
+    bool isSearch = false,
+  }) {
     if (movies.isEmpty) {
       return _buildEmptyState(
-          isSearch 
-              ? 'Film "${_searchController.text}" tidak ditemukan.'
-              : (_selectedGenre != null ? 'Tidak ada film untuk genre "${_selectedGenre!.name}"' : 'Film tidak ditemukan.'),
+        isSearch
+            ? 'Film "${_searchController.text}" tidak ditemukan.'
+            : (_selectedGenre != null
+                ? 'Tidak ada film untuk genre "${_selectedGenre!.name}"'
+                : 'Film tidak ditemukan.'),
       );
     }
 
@@ -535,7 +633,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             itemBuilder: (context, index) {
               final movie = movies[index];
-              return MovieCard(movie: movie, width: double.infinity, height: double.infinity, onTap: () => _navigateToDetail(movie));
+              return MovieCard(
+                movie: movie,
+                width: double.infinity,
+                height: double.infinity,
+                onTap: () => _navigateToDetail(movie),
+              );
             },
           ),
         ),
@@ -545,16 +648,23 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           ),
         if (!isSearch && !_canLoadMoreExplore && _exploreMovies.isNotEmpty)
-           Padding(
-             padding: const EdgeInsets.symmetric(vertical: 20.0),
-             child: Text("Semua film sudah ditampilkan.", style: TextStyle(color: Colors.grey[600]), textAlign: TextAlign.center),
-           )
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Text(
+              "Semua film sudah ditampilkan.",
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+          ),
       ],
     );
   }
-  
+
   Widget _buildLoadingIndicator({double height = 150}) {
-    return SizedBox(height: height, child: const Center(child: CircularProgressIndicator()));
+    return SizedBox(
+      height: height,
+      child: const Center(child: CircularProgressIndicator()),
+    );
   }
 
   Widget _buildEmptyState(String message, {double height = 150}) {
@@ -563,8 +673,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Text(message, style: TextStyle(color: Colors.grey[600], fontSize: 15), textAlign: TextAlign.center),
-        )
+          child: Text(
+            message,
+            style: TextStyle(color: Colors.grey[600], fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
     );
   }

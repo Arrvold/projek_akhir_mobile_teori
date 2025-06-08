@@ -42,7 +42,7 @@ class MovieCard extends StatelessWidget {
                     child: const Icon(Icons.movie_creation_outlined, color: Colors.grey, size: 40),
                   );
                 },
-                // Loading builder untuk menampilkan indikator saat gambar dimuat
+                
                 loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Center(

@@ -19,8 +19,8 @@ class _MainScreenState extends State<MainScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     WishlistScreen(),
-    ProfileScreen(), // Nanti kita buat ProfileScreen sebenarnya
-    ImpressionsScreen(), // Nanti kita buat ImpressionsScreen sebenarnya
+    ProfileScreen(), 
+    ImpressionsScreen(), 
   ];
 
   void _onItemTapped(int index) {
@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: 'Utama',
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             // <-- ITEM BARU UNTUK WISHLIST
@@ -59,10 +59,10 @@ class _MainScreenState extends State<MainScreen> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor:
-            Theme.of(context).primaryColor, // Warna item terpilih
-        unselectedItemColor: Colors.grey[600], // Warna item tidak terpilih
+            Theme.of(context).primaryColor, 
+        unselectedItemColor: Colors.grey[600], 
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // Agar semua label terlihat
+        type: BottomNavigationBarType.fixed,
         showUnselectedLabels: true,
       ),
     );

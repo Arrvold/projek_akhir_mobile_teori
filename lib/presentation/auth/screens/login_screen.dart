@@ -63,14 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = true;
       });
-
       String username = _usernameController.text.trim();
       String password = _passwordController.text;
-
       UserModel? user = await DatabaseHelper.instance.getUserByUsername(username);
-
       if (!mounted) return;
-
+      
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -80,11 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() { _isLoading = false; });
         return;
       }
-
       bool isPasswordCorrect = await EncryptionHelper.verifyPassword(password, user.passwordHash);
-
       if (!mounted) return;
-
       if (!isPasswordCorrect) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -93,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() { _isLoading = false; });
         return;
       }
-
       if (user.id == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -102,13 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() { _isLoading = false; });
           return;
       }
-      // menyimpan userId dan username ke SharedPreferences
       await PreferencesHelper.saveUserSession(user.id!, user.username);
-
       await _saveRememberMeStatus();
-
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('Login berhasil! Selamat datang, ${user.username}.'),
