@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Untuk NumberFormat
+import 'package:intl/intl.dart'; 
 import '../../../data/models/rental_model.dart';
 import '../../../data/sources/local/database_helper.dart';
 import '../../../data/sources/local/preferences_helper.dart';
 import '../../../services/time_service.dart';
 import '../../../services/location_service.dart';
-import '../../../core/config/constants.dart'; // Untuk SUPPORTED_COUNTRIES, WIB, WITA, WIT, FALLBACK_TIMEZONE_NAME
-// Import MovieDetailScreen jika Anda ingin navigasi ke detail dari histori
+import '../../../core/config/constants.dart'; 
 import '../../movie_detail/screens/movie_detail_screen.dart';
-// Import MovieModel jika Anda berencana navigasi ke MovieDetailScreen yang mungkin menerimanya
-// import '../../../data/models/movie_model.dart';
 
 
 class RentalHistoryScreen extends StatefulWidget {
@@ -24,13 +21,13 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
   bool _isLoading = true;
   String? _error;
 
-  final TimeService _timeService = TimeService(); // Inisialisasi TimeService
-  final LocationService _locationService = LocationService(); // Inisialisasi LocationService
+  final TimeService _timeService = TimeService(); 
+  final LocationService _locationService = LocationService(); 
   
-  String _deviceEffectiveTimeZoneName = FALLBACK_TIMEZONE_NAME; // Zona waktu efektif awal
-  String? _selectedDisplayTimeZone; // Zona waktu yang dipilih pengguna untuk display
+  String _deviceEffectiveTimeZoneName = FALLBACK_TIMEZONE_NAME;
+  String? _selectedDisplayTimeZone; 
 
-  List<Map<String, String>> _displayableTimezones = []; // Daftar untuk dropdown
+  List<Map<String, String>> _displayableTimezones = []; 
 
   @override
   void initState() {
@@ -42,33 +39,26 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
     final Set<String> uniqueIanaNames = {};
     final List<Map<String, String>> timezones = [];
 
-    // Fungsi helper untuk menambahkan zona waktu ke daftar jika unik
     void addUniqueTimezone(String iana, String displayName) {
       if (uniqueIanaNames.add(iana)) {
         timezones.add({'iana': iana, 'name': displayName});
       }
     }
 
-    // Tambahkan zona waktu spesifik Indonesia di awal
     addUniqueTimezone(WIB, 'Indonesia (WIB)');
     addUniqueTimezone(WITA, 'Indonesia (WITA)');
     addUniqueTimezone(WIT, 'Indonesia (WIT)');
 
-    // Tambahkan zona waktu dari SUPPORTED_COUNTRIES
     for (var country in SUPPORTED_COUNTRIES) {
       String displayName = '${country.countryName} (${country.timeZoneName.split('/').last.replaceAll('_', ' ')})';
       addUniqueTimezone(country.timeZoneName, displayName);
     }
 
-    // Tambahkan zona waktu efektif perangkat jika belum ada di daftar
-    // Ini berguna jika zona waktu efektif perangkat adalah hasil fallback (mis. London)
-    // atau zona waktu IANA valid lainnya yang belum tercakup.
     if (_deviceEffectiveTimeZoneName.isNotEmpty) {
        addUniqueTimezone(_deviceEffectiveTimeZoneName, 'Default Perangkat (${_deviceEffectiveTimeZoneName.split('/').last.replaceAll('_', ' ')})');
     }
 
 
-    // Urutkan berdasarkan nama untuk tampilan yang lebih baik
     timezones.sort((a, b) => a['name']!.compareTo(b['name']!));
     
     if (mounted) {
@@ -90,9 +80,9 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
           currentDeviceActualTimeZone: deviceActualTimeZone,
           deviceCountryCode: deviceCountryCode,
         );
-        _selectedDisplayTimeZone = _deviceEffectiveTimeZoneName; // Default ke zona waktu efektif perangkat
+        _selectedDisplayTimeZone = _deviceEffectiveTimeZoneName; 
         
-        _prepareDisplayableTimezones(); // Siapkan daftar zona waktu untuk dropdown setelah _deviceEffectiveTimeZoneName diketahui
+        _prepareDisplayableTimezones();
 
         print("RentalHistoryScreen: Zona Waktu Display Awal = $_selectedDisplayTimeZone");
         await _loadRentalHistory();
@@ -166,7 +156,6 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Zona waktu yang akan digunakan untuk display, berdasarkan pilihan user atau default perangkat
     final String currentTimeZoneForDisplay = _selectedDisplayTimeZone ?? _deviceEffectiveTimeZoneName;
 
     return Scaffold(

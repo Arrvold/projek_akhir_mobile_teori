@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../data/models/movie_model.dart'; // Kita akan coba tampilkan MovieModel dasar
+import '../../../data/models/movie_model.dart';
 import '../../../data/sources/local/preferences_helper.dart';
 import '../../../data/sources/remote/tmdb_api_service.dart';
-// import '../../../core/widgets/movie_card.dart'; // Menggunakan MovieCard yang sudah ada
-import '../../movie_detail/screens/movie_detail_screen.dart'; // Untuk navigasi ke detail
+import '../../movie_detail/screens/movie_detail_screen.dart'; 
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -14,7 +13,7 @@ class WishlistScreen extends StatefulWidget {
 
 class _WishlistScreenState extends State<WishlistScreen> {
   final TmdbApiService _apiService = TmdbApiService();
-  List<MovieModel> _wishlistMovies = []; // Akan menyimpan MovieModel dari film di wishlist
+  List<MovieModel> _wishlistMovies = []; 
   bool _isLoading = true;
   String? _error;
 
@@ -30,30 +29,29 @@ class _WishlistScreenState extends State<WishlistScreen> {
     setState(() {
       _isLoading = true;
       _error = null;
-      _wishlistMovies = []; // Kosongkan dulu untuk refresh
+      _wishlistMovies = []; 
     });
 
     try {
-      // Langkah 1: Dapatkan ID pengguna yang sedang login
+      // dapatkan ID pengguna yang sedang login
       int? loggedInUserId = await PreferencesHelper.getLoggedInUserId();
 
       if (loggedInUserId == null) {
-        // Jika tidak ada pengguna yang login, wishlist seharusnya kosong atau tampilkan pesan
         if (mounted) {
           setState(() {
             _isLoading = false;
             _error = "Silakan login untuk melihat wishlist Anda.";
-            _wishlistMovies = []; // Pastikan wishlist kosong
+            _wishlistMovies = []; 
           });
         }
         return;
       }
 
-      // Langkah 2: Gunakan userId untuk mengambil wishlist yang spesifik
-      List<String> movieIds = await PreferencesHelper.getWishlistMovieIds(loggedInUserId); // <--- KIRIM userId
+      // gunakan userId untuk mengambil wishlist yang spesifik
+      List<String> movieIds = await PreferencesHelper.getWishlistMovieIds(loggedInUserId); 
 
       if (movieIds.isEmpty) {
-        if (mounted) setState(() { _isLoading = false; _wishlistMovies = []; }); // Pastikan _wishlistMovies kosong
+        if (mounted) setState(() { _isLoading = false; _wishlistMovies = []; }); 
         return;
       }
 
@@ -61,35 +59,22 @@ class _WishlistScreenState extends State<WishlistScreen> {
       for (String idStr in movieIds) {
         try {
           int movieId = int.parse(idStr);
-          // PENTING: getMovieDetails mengembalikan MovieDetailModel.
-          // Kita butuh MovieModel untuk MovieCard, atau ubah MovieCard.
-          // Untuk sederhana, kita akan fetch detail, lalu buat MovieModel dari itu.
-          // Atau, idealnya, TmdbApiService punya method getMovieSummaryById(id)
-          // yang mengembalikan MovieModel.
 
-          // Untuk saat ini, kita fetch detail lalu ekstrak info yang relevan
-          // Ini tidak ideal karena MovieDetailModel lebih berat.
-          // Solusi lebih baik: TmdbApiService punya getMovieById(id) yang return MovieModel
-          // atau MovieCard bisa menerima MovieDetailModel.
-
-          // Mari kita asumsikan kita punya cara mendapatkan MovieModel dari ID
-          // Atau kita buat instance MovieModel dari MovieDetailModel
           final movieDetail = await _apiService.getMovieDetails(movieId);
           fetchedMovies.add(
-            MovieModel( // Membuat MovieModel dari MovieDetailModel
+            MovieModel( 
               id: movieDetail.id,
               title: movieDetail.title,
               posterPath: movieDetail.posterPath,
               overview: movieDetail.overview,
               voteAverage: movieDetail.voteAverage,
               releaseDate: movieDetail.releaseDate,
-              genreIds: movieDetail.genres.map((g) => g.id).toList(), // Ambil ID genre
-              // backdropPath bisa ditambahkan jika MovieCard menggunakannya
+              genreIds: movieDetail.genres.map((g) => g.id).toList(), 
+              
             )
           );
         } catch (e) {
           print('Error fetching movie with ID $idStr: $e');
-          // Lanjutkan ke ID berikutnya jika satu gagal
         }
       }
 
@@ -121,7 +106,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
         builder: (context) => MovieDetailScreen(movieId: movie.id),
       ),
     ).then((_) {
-      // Refresh wishlist setelah kembali dari detail, karena mungkin ada perubahan
       _loadWishlistMovies();
     });
   }
@@ -159,12 +143,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Wishlist Saya'),
-        // actions: [
-        //   IconButton(
-        //     icon: Icon(Icons.refresh),
-        //     onPressed: _loadWishlistMovies,
-        //   ),
-        // ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -197,20 +175,20 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         ),
                       ),
                     )
-                  : RefreshIndicator( // Agar bisa pull-to-refresh
+                  : RefreshIndicator( 
                       onRefresh: _loadWishlistMovies,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(8.0),
                         itemCount: _wishlistMovies.length,
                         itemBuilder: (context, index) {
                           final movie = _wishlistMovies[index];
-                          return Card( // Bungkus dengan Card untuk tampilan yang lebih baik
+                          return Card( 
                             margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
                             elevation: 2.0,
                             child: ListTile(
                               contentPadding: const EdgeInsets.all(10.0),
                               leading: SizedBox(
-                                width: 70, // Lebar untuk poster kecil
+                                width: 70, 
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(4.0),
                                   child: Image.network(

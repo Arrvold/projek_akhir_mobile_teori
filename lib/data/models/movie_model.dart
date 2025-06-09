@@ -43,7 +43,7 @@ class MovieModel {
 
   String get fullBackdropUrl {
     if (backdropPath != null) {
-      return 'https://image.tmdb.org/t/p/w780$backdropPath'; // w780 atau original
+      return 'https://image.tmdb.org/t/p/w780$backdropPath'; 
     }
     return 'https://via.placeholder.com/780x439.png?text=No+Image';
   }

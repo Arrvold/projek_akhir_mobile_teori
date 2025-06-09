@@ -11,11 +11,11 @@ import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('id_ID', null); // <-- TAMBAHKAN BARIS INI
+  await initializeDateFormatting('id_ID', null);
 
-  // Inisialisasi data zona waktu untuk package timezone
+  // Inisialisasi data zona waktu
   tzdata.initializeTimeZones();
-  // Set zona waktu lokal untuk package timezone menggunakan flutter_timezone
+  // Set zona waktu lokal
   try {
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(currentTimeZone));
@@ -28,9 +28,6 @@ Future<void> main() async {
   // Inisialisasi Notification Service
   await NotificationService().initNotifications();
   print("MAIN.DART: Notification service initialized.");
-
-  // Cek apakah pengguna sudah login sebelumnya
-  // bool isLoggedIn = await PreferencesHelper.isUserLoggedIn();
   runApp(MyApp());
 }
 

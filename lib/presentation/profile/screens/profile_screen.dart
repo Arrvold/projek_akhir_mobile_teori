@@ -10,7 +10,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile Saya'),
-        backgroundColor: theme.primaryColor, // Jika ingin konsisten
+        backgroundColor: theme.primaryColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -19,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20), // Spasi dari atas
+              const SizedBox(height: 20), 
               const CircleAvatar(
                 radius: 60,
                 backgroundImage: AssetImage(
@@ -68,13 +68,6 @@ class ProfileScreen extends StatelessWidget {
                   );
                 },
               ),
-              // Anda bisa menambahkan item lain di sini (mis. Pengaturan, Bantuan, dll.)
-              // ListTile(
-              //   leading: Icon(Icons.settings_outlined, color: theme.primaryColor),
-              //   title: Text('Pengaturan', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              //   onTap: () { /* ... */ },
-              // ),
             ],
           ),
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../home/screens/home_screen.dart'; // Import HomeScreen
-// Import placeholder untuk Profile dan Kesan Pesan
+import '../home/screens/home_screen.dart'; 
+
 import '../profile/screens/profile_screen.dart';
 import '../impressions/screens/impressions_screen.dart';
 import '../wishlist/screens/wishlist_screen.dart';
@@ -15,7 +15,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // Daftar halaman untuk BottomNavigationBar
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     WishlistScreen(),
@@ -41,7 +40,6 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            // <-- ITEM BARU UNTUK WISHLIST
             icon: Icon(Icons.favorite_border_outlined),
             activeIcon: Icon(Icons.favorite),
             label: 'Wishlist',

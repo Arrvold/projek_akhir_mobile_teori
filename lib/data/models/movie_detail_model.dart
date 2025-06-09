@@ -1,5 +1,4 @@
-import 'genre_model.dart'; // Kita sudah punya ini
-
+import 'genre_model.dart';
 class MovieDetailModel {
   final int id;
   final String title;
@@ -9,10 +8,10 @@ class MovieDetailModel {
   final String? releaseDate;
   final double voteAverage;
   final int voteCount;
-  final int? runtime; // Durasi dalam menit
+  final int? runtime; 
   final String? tagline;
-  final List<GenreModel> genres; // Daftar objek GenreModel
-  // Anda bisa menambahkan properti lain seperti production_companies, videos, credits, dll.
+  final List<GenreModel> genres; 
+  
   final String? homepage;
 
   MovieDetailModel({
@@ -61,7 +60,7 @@ class MovieDetailModel {
 
   String get fullBackdropUrl {
     if (backdropPath != null) {
-      return 'https://image.tmdb.org/t/p/w1280$backdropPath'; // Ukuran lebih besar untuk backdrop
+      return 'https://image.tmdb.org/t/p/w1280$backdropPath'; 
     }
     return 'https://via.placeholder.com/1280x720.png?text=No+Backdrop';
   }
@@ -71,7 +70,6 @@ class MovieDetailModel {
     final duration = Duration(minutes: runtime!);
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    // return "${twoDigits(duration.inHours)}h ${twoDigitMinutes}m";
     if (duration.inHours > 0) {
       return "${duration.inHours}j ${twoDigitMinutes}m";
     } else {

@@ -1,6 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_timezone/flutter_timezone.dart'; // Untuk mendapatkan zona waktu lokal IANA
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 class NotificationService {
   static final NotificationService _notificationService =
@@ -14,26 +14,12 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> initNotifications() async {
-    // Pengaturan inisialisasi untuk Android
-    // Ganti 'app_notification_icon' dengan nama file ikon notifikasi Anda (tanpa ekstensi)
-    // yang ada di android/app/src/main/res/drawable/
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('app_notification_icon');
-
-    // Pengaturan inisialisasi untuk iOS
-    final DarwinInitializationSettings
-    initializationSettingsDarwin = DarwinInitializationSettings(
-      requestAlertPermission:
-          true, // Default true, bisa false jika Anda handle permintaan izin terpisah
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
 
     final InitializationSettings initializationSettings =
         InitializationSettings(
           android: initializationSettingsAndroid,
-          iOS: initializationSettingsDarwin,
-          macOS: initializationSettingsDarwin, // Bisa pakai setting Darwin juga
         );
 
     // Inisialisasi plugin
@@ -46,12 +32,10 @@ class NotificationService {
         final String? payload = notificationResponse.payload;
         if (payload != null) {
           print('NOTIFICATION PAYLOAD: $payload');
-          // Di sini Anda bisa navigasi ke halaman tertentu berdasarkan payload
-          // Misalnya: if (payload == 'payment_success') { ... }
         }
       },
       onDidReceiveBackgroundNotificationResponse:
-          notificationTapBackground, // Untuk background
+          notificationTapBackground, 
     );
 
     // Minta izin notifikasi untuk Android 13+
@@ -65,16 +49,16 @@ class NotificationService {
           await androidImplementation.requestNotificationsPermission();
       print("Izin notifikasi Android 13+ diberikan: $granted");
     }
-    // Minta izin alarm presisi (jika diperlukan, tergantung versi plugin & target Android)
+    
     final bool? alarmGranted = await androidImplementation!.requestExactAlarmsPermission();
     print("Izin alarm presisi Android diberikan: $alarmGranted");
 
-    // Buat Channel Notifikasi (Untuk Android 8.0+)
+
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'rental_channel', // id
-      'Notifikasi Penyewaan Film', // title
+      'rental_channel',
+      'Notifikasi Penyewaan Film', 
       description:
-          'Channel untuk notifikasi terkait penyewaan film.', // description
+          'Channel untuk notifikasi terkait penyewaan film.', 
       importance: Importance.max,
       playSound: true,
     );
@@ -88,23 +72,23 @@ class NotificationService {
     print("Notification service initialized.");
   }
 
-  // Fungsi untuk menampilkan notifikasi langsung
+
   Future<void> showSimpleNotification({
     required int id,
     required String title,
     required String body,
-    String? payload, // Data tambahan yang dikirim saat notifikasi di-tap
+    String? payload, 
   }) async {
     const AndroidNotificationDetails
     androidNotificationDetails = AndroidNotificationDetails(
-      'rental_channel', // Gunakan ID channel yang sama
+      'rental_channel', 
       'Notifikasi Penyewaan Film',
       channelDescription: 'Channel untuk notifikasi terkait penyewaan film.',
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
       playSound: true,
-      // icon: 'app_notification_icon', // Bisa diset di sini juga atau default dari inisialisasi
+    
     );
     const NotificationDetails notificationDetails = NotificationDetails(
       android: androidNotificationDetails,
@@ -121,21 +105,20 @@ class NotificationService {
     print("Simple notification shown: id=$id, title=$title");
   }
 
-  // Fungsi untuk menjadwalkan notifikasi
+  //fungsi penjadwalan notifikasi
   Future<void> scheduleNotification({
     required int id,
     required String title,
     required String body,
-    required DateTime scheduledDateTimeUtc, // Waktu harus dalam UTC
+    required DateTime scheduledDateTimeUtc,
     String? payload,
   }) async {
     try {
-      // Dapatkan zona waktu lokal perangkat
+
       final String localTimezone = await FlutterTimezone.getLocalTimezone();
       final tz.Location location = tz.getLocation(localTimezone);
 
-      // Konversi waktu UTC terjadwal ke TZDateTime di zona waktu lokal
-      // Ini penting agar penjadwalan akurat menurut jam perangkat
+
       final tz.TZDateTime scheduledDate = tz.TZDateTime.from(
         scheduledDateTimeUtc,
         location,
@@ -164,11 +147,10 @@ class NotificationService {
         ),
         androidScheduleMode:
             AndroidScheduleMode
-                .exactAllowWhileIdle, // Untuk penjadwalan yang lebih presisi
+                .exactAllowWhileIdle, 
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
-        // matchDateTimeComponents: DateTimeComponents.time, // Atau sesuaikan jika perlu mencocokkan tanggal juga
       );
       print("Notification scheduled successfully for $scheduledDate");
     } catch (e) {
@@ -176,14 +158,13 @@ class NotificationService {
     }
   }
 
-  // --- Wrapper Spesifik untuk Notifikasi Aplikasi Anda ---
+  // wrapper spesifik untuk notifikasi aplikasi
 
-  // ID Notifikasi (gunakan ID unik untuk setiap jenis notifikasi jika perlu dibatalkan terpisah)
   static const int paymentSuccessId = 0;
   static const int watchReminderIdBase =
-      1000; // Base ID, tambahkan movieId untuk unik
+      1000; 
   static const int expiryReminderIdBase =
-      2000; // Base ID, tambahkan movieId untuk unik
+      2000;
 
   Future<void> showPaymentSuccessNotification(String movieTitle) async {
     await showSimpleNotification(
@@ -200,13 +181,13 @@ class NotificationService {
     DateTime rentalStartTimeUtc,
   ) async {
     await scheduleNotification(
-      id: watchReminderIdBase + movieId, // ID unik per film
+      id: watchReminderIdBase + movieId, 
       title: 'Saatnya Menonton!',
       body:
           'Jangan lupa untuk menonton film "$movieTitle" yang baru saja Anda sewa.',
       scheduledDateTimeUtc: rentalStartTimeUtc.add(
         const Duration(minutes: 1),
-      ), // 1 menit setelah sewa
+      ), 
       payload: 'watch_reminder_$movieId',
     );
   }
@@ -217,12 +198,12 @@ class NotificationService {
     DateTime rentalEndTimeUtc,
   ) async {
     await scheduleNotification(
-      id: expiryReminderIdBase + movieId, // ID unik per film
+      id: expiryReminderIdBase + movieId, 
       title: 'Waktu Sewa Segera Habis!',
       body: 'Waktu sewa untuk film "$movieTitle" akan berakhir dalam 1 jam.',
       scheduledDateTimeUtc: rentalEndTimeUtc.subtract(
         const Duration(hours: 1),
-      ), // 1 jam sebelum habis
+      ), 
       payload: 'expiry_reminder_$movieId',
     );
   }
@@ -238,8 +219,6 @@ class NotificationService {
   }
 }
 
-// Callback untuk handle tap notifikasi saat aplikasi di background (Android)
-// Ini harus top-level function atau static method
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
 

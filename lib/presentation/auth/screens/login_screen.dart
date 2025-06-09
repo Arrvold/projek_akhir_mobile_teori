@@ -131,8 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  // FlutterLogo(size: 80),
-                  // SizedBox(height: 30),
+
                   Text(
                     'Login',
                     textAlign: TextAlign.center,

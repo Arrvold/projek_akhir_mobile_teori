@@ -38,7 +38,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       _isLoading = true;
       _error = null;
       _isCurrentlyRented = false;
-      // _isInWishlist di-reset atau di-fetch ulang tergantung kebutuhan
     });
 
     try {
@@ -86,7 +85,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   Future<void> _toggleWishlist() async {
     if (_movieDetail == null || !mounted) return;
 
-    // DAPATKAN userId SEBELUM MELAKUKAN AKSI WISHLIST
+    // dapatkan userId 
     int? loggedInUserId = await PreferencesHelper.getLoggedInUserId();
     if (loggedInUserId == null) {
       if (mounted) {
@@ -105,7 +104,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     String message;
 
     if (_isInWishlist) {
-      // Panggil removeFromWishlist DENGAN userId
       actionSuccess = await PreferencesHelper.removeFromWishlist(
         loggedInUserId,
         movieId,
@@ -115,7 +113,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
               ? 'Dihapus dari wishlist.'
               : 'Gagal menghapus dari wishlist.';
     } else {
-      // Panggil addToWishlist DENGAN userId
       actionSuccess = await PreferencesHelper.addToWishlist(
         loggedInUserId,
         movieId,
@@ -146,7 +143,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
   /// Fungsi untuk membuka URL di browser eksternal
   Future<void> _launchWatchUrl() async {
-    // ---- TAMBAHKAN LOG DI SINI ----
     print("--- Debug _launchWatchUrl ---");
     if (_movieDetail == null) {
       print("_movieDetail adalah NULL");
@@ -155,7 +151,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       print("Judul Film: ${_movieDetail!.title}");
       print(
         "URL Homepage dari _movieDetail: '${_movieDetail!.homepage}'",
-      ); // Penting!
+      );
       print(
         "Apakah _movieDetail.homepage null? --> ${_movieDetail!.homepage == null}",
       );
@@ -165,7 +161,6 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
         );
       }
     }
-    // --------------------------------
 
     if (_movieDetail?.homepage == null || _movieDetail!.homepage!.isEmpty) {
       if (mounted) {
@@ -203,10 +198,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
     if (_movieDetail == null) return;
 
     if (_isCurrentlyRented) {
-      // Jika sedang disewa, coba buka URL untuk menonton
       _launchWatchUrl();
     } else {
-      // Jika belum disewa, arahkan ke pembayaran
       Navigator.push(
         context,
         MaterialPageRoute(

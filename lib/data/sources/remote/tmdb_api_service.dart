@@ -92,12 +92,9 @@ class TmdbApiService {
     return GenreResponse.fromJson(data).genres;
   }
 
-  /// Mencari film berdasarkan query.
-  /// [query]: Kata kunci pencarian.
-  /// [page]: Nomor halaman.
   Future<List<MovieModel>> searchMovies(String query, {int page = 1}) async {
     if (query.trim().isEmpty) {
-      return []; // Kembalikan list kosong jika query kosong
+      return [];
     }
     final url = Uri.parse(
       '$_baseUrl/search/movie'
@@ -114,21 +111,15 @@ class TmdbApiService {
     return MovieResponse.fromJson(data).results;
   }
 
-  // --- Anda bisa menambahkan method lain di sini sesuai kebutuhan ---
-  // Misalnya:
   // Future<MovieDetailModel> getMovieDetails(int movieId) async { ... }
   // Future<List<CastModel>> getMovieCredits(int movieId) async { ... }
   // Future<List<VideoModel>> getMovieVideos(int movieId) async { ... }
 
-  /// Mengambil detail lengkap sebuah film berdasarkan ID-nya.
-  /// Juga mengambil video trailer jika ada.
   Future<MovieDetailModel> getMovieDetails(int movieId) async {
-    // Tambahkan &append_to_response=videos untuk mendapatkan video trailer
     final url = Uri.parse('$_baseUrl/movie/$movieId?api_key=$_apiKey&language=$_defaultLanguage&append_to_response=videos,credits');
     print('Fetching Movie Details: $url');
     final response = await http.get(url);
     final data = await _handleResponse(response, 'detail film');
-    // Di sini Anda juga bisa mem-parsing 'videos' dan 'credits' jika diperlukan
     return MovieDetailModel.fromJson(data);
   }
 }

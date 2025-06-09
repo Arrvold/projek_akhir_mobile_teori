@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Untuk NumberFormat
+import 'package:intl/intl.dart'; 
 import '../../../core/config/constants.dart';
 import '../../../data/models/movie_detail_model.dart';
 import '../../../data/models/rental_model.dart';
@@ -24,16 +24,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   String? _selectedCurrencyCode;
   String _selectedCurrencySymbol = '';
-  double? _displayedPrice; // Harga yang sudah dikonversi ke _selectedCurrencyCode
-  double _currentBasePriceIdr = 0.0; // Harga dasar dalam IDR untuk durasi terpilih
+  double? _displayedPrice; 
+  double _currentBasePriceIdr = 0.0; 
 
-  bool _isLoadingDetails = true; // Untuk loading awal (lokasi, mata uang awal)
-  bool _isCalculatingPrice = false; // Untuk loading saat ganti durasi/mata uang
+  bool _isLoadingDetails = true; 
+  bool _isCalculatingPrice = false; 
 
   String? _error;
   final List<SupportedCountry> _availableCurrencies = SUPPORTED_COUNTRIES;
 
-  // Inisialisasi _selectedRentalDuration dengan benar
+  // Inisialisasi _selectedRentalDuration
   late RentalDurationOption _selectedRentalDuration;
 
   @override
@@ -44,9 +44,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       (opt) => opt.duration == DEFAULT_RENTAL_DURATION,
       orElse: () => SUPPORTED_RENTAL_DURATIONS.length > 1 ? SUPPORTED_RENTAL_DURATIONS[1] : SUPPORTED_RENTAL_DURATIONS[0] // Fallback aman
     );
-    // Set harga dasar awal berdasarkan durasi default, lalu inisialisasi detail pembayaran
-    _calculateBasePriceIdrAndUpdateDisplay(_selectedRentalDuration); // Hitung harga dasar IDR awal
-    _initializePaymentLocationAndCurrency(); // Kemudian tentukan mata uang & konversi
+    _calculateBasePriceIdrAndUpdateDisplay(_selectedRentalDuration); 
+    _initializePaymentLocationAndCurrency();
   }
 
   /// Menghitung harga dasar dalam IDR berdasarkan durasi terpilih

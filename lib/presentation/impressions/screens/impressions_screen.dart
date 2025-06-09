@@ -5,20 +5,16 @@ import '../../../data/sources/local/preferences_helper.dart';
 class ImpressionsScreen extends StatelessWidget {
   const ImpressionsScreen({super.key});
 
-  // UBAH MENJADI ASYNC DAN TAMBAHKAN PEMANGGILAN clearUserSession
-  Future<void> _logout(BuildContext context) async { // Jadikan async
-    // Hapus sesi pengguna dari SharedPreferences
+  Future<void> _logout(BuildContext context) async { 
     await PreferencesHelper.clearUserSession();
 
-    // Cek apakah widget masih terpasang sebelum navigasi dan menampilkan SnackBar
     if (!context.mounted) return;
 
-    // Navigasi kembali ke halaman login dan hapus semua rute sebelumnya
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Anda telah berhasil logout.'), // Ubah pesan
+        content: Text('Anda telah berhasil logout.'),
         backgroundColor: Colors.green,
       ),
     );
@@ -29,7 +25,6 @@ class ImpressionsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kesan Pesan'),
-        // backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
